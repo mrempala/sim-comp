@@ -11,7 +11,6 @@
 //We should probably place structs in files outside this one
 //along with any data structures.
 
-//Based on design from the presentation
 struct processControlBlock
 {
     pid_t pid;
