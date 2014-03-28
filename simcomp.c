@@ -50,7 +50,7 @@ int main()
     //Begin Simulation Loop
     while(false) //Jobs remaining?
     {
-        if(false) //Is there an I/O Interrupt?
+        while(false) //Is there an I/O Interrupt?
         {
             //Remove waiting process from I/O Queue
             
