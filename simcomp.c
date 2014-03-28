@@ -36,12 +36,33 @@ int main()
 {
     //Initialize variables
     
-    //Boot-Up Simulated Computer
+    
+    //Initalize Simulated Computer
+    
+        //Read config file
+        
+        //Set config
+        
+        //Read program file
+        
+        //Populate Job Queue
+        
     
     //Begin Simulation Loop
-    while(true)
+    while(false) //Jobs remaining?
     {
-        //
+        if(false) //Is there an I/O Interrupt?
+        {
+            //Remove waiting process from I/O Queue
+            
+            //Place Job in back of Queue
+        }
+        
+        //Process Task
+        
+        //Count Time Quantum as Passed
+        
+        //Log Output Data
     }
     
     //Print output to screen, file, or both
