@@ -8,24 +8,44 @@
 
 //Global
 
+//We should probably place structs in files outside this one
+//along with any data structures.
+
+//Based on design from the presentation
 struct processControlBlock
 {
-    //Identical to slide from design
     pid_t pid;
     pid_t parentPid;
-    //Time of arrival
-    //Time remaining
+    //Time of Arrival
+    //Time Remaining
     int priority;
-    //List of operations
+    //List of Actions/Operations
 };
 
+struct taskInfoBlock
+{
+    //Operation Type/Name
+    int totalCycles;
+    int cyclesRemaining;
+};
 
 //Function Declarations
 
 //Main
 int main()
 {
-
+    //Initialize variables
+    
+    //Boot-Up Simulated Computer
+    
+    //Begin Simulation Loop
+    while(true)
+    {
+        //
+    }
+    
+    //Print output to screen, file, or both
+    
     return 0;
 }
 
