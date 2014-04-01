@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <stdlib.h>
 
 #define true 1
 #define false 0
@@ -11,8 +12,7 @@
 //We should probably place structs in files outside this one
 //along with any data structures.
 
-typedef struct processControlBlock processControlBlock;
-struct processControlBlock
+typedef struct processControlBlock
 {
     pid_t pid;
     pid_t parentPid;
@@ -21,10 +21,10 @@ struct processControlBlock
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
-    processControlBlock *nextPCB;
-};
+    struct processControlBlock *nextPCB;
+}processControlBlock;
 
-struct taskInfoBlock
+typedef struct taskInfoBlock
 {
     //Operation Type/Name
     int totalCycles;
@@ -37,7 +37,11 @@ struct taskInfoBlock
 int main()
 {
     //Initialize variables
+    taskInfoBlock test;
+    processControlBlock test2;
     
+    //Example of dynamic allocation using c (new is c++)
+    test2.nextPCB = malloc(sizeof(processControlBlock));
     
     //Initalize Simulated Computer
     
