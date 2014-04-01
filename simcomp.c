@@ -42,6 +42,7 @@ int main()
     
     //Example of dynamic allocation using c (new is c++)
     test2.nextPCB = malloc(sizeof(processControlBlock));
+    free(test2.nextPCB);
     
     //Initalize Simulated Computer
     
