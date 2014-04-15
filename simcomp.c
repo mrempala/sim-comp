@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <pthread.h>
 
 //Global
 
@@ -32,6 +33,7 @@ typedef struct processControlBlock
     pid_t parentPid;
     time_t arrivalTime;
     time_t timeRemaining;
+	//holds thread info, if != something the thread is not completed
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
@@ -64,6 +66,13 @@ Name: createProcessQueue
 Purpose: Creates process queue from process file
 */
 bool createProcessQueue(struct processControlBlock **process, const char *processFilePath);
+
+/*
+Name: threadWait
+Purpose: function to pass to I/O thread to make it wait the required time
+*/
+void* threadWait(void*);
+
 
 //Main
 int main(int argc, char *argv[])
@@ -119,21 +128,22 @@ int main(int argc, char *argv[])
         
     
     //Begin Simulation Loop
-    while(false) //Jobs remaining?
-    {
-        while(false) //Is there an I/O Interrupt?
-        {
-            //Remove waiting process from I/O Queue
-            
-            //Place Job in back of Queue
-        }
-        
+    while(false) //Jobs remaining?---Are we deleting each when they're done?
+    {        
+        //Process current task by busy waiting
+
+		/* while (totalTime < allowedTime)
+		{
+			-check if process task is complete
+				-if it is move to the next task
+					-if there is no next task end the process
+				-if next task is I/O start the thread, add process to I/O queue, stop loop
+			-else continue
+		}
+		*/
+
         //Perform Context Switch if Necessary
-        
-        //Process Task
-        
-        //Count Time Quantum as Passed
-        
+
         //Log Output Data
     }
     
