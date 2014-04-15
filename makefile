@@ -6,7 +6,7 @@ CFLAGS = -Wall -std=c99
 all: $(PROG)
 
 $(PROG):   $(SRCS)
-	$(CC) $(CFLAGS) -o $(PROG) $(SRCS) $(LIBS)
+	$(CC) $(CFLAGS) -pthread -o $(PROG) $(SRCS) $(LIBS)
 
 clean:
 	rm $(PROG)
