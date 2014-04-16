@@ -33,7 +33,7 @@ typedef struct processControlBlock
     pid_t parentPid;
     time_t arrivalTime;
     time_t timeRemaining;
-	//holds thread info, if != something the thread is not completed
+	//new var needs to hold thread info, if != something the thread is not completed
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
@@ -124,12 +124,12 @@ int main(int argc, char *argv[])
     //test2.nextPCB = malloc(sizeof(processControlBlock));
     //free(test2.nextPCB);
         
-    
+    //Do we have a pointer to the process queue?
     //Begin Simulation Loop
     while(false) //Jobs remaining?---Are we deleting each when they're done?
     {        
         //Process current task by busy waiting
-
+		// if current process is not blocked for I/O wait, else, skip wait
 		/* while (totalTime < allowedTime)
 		{
 			-check if process task is complete
@@ -138,14 +138,18 @@ int main(int argc, char *argv[])
 				-if next task is I/O start the thread, add process to I/O queue, stop loop
 			-else continue
 		}
+
 		****or****
-		usleep either for maximum allowed time or until process is finished
+		-check how long next process step is
+		-usleep either for maximum allowed time or until process is finished
+		-if there is time leftover subtract from max time and continue
+
 		*/
 		
+		// if current process is finished delete it
+        // Perform Context Switch
 
-        //Perform Context Switch if Necessary
-
-        //Log Output Data
+        //	Log Output Data
     }
     
     //Print output to screen, file, or both
