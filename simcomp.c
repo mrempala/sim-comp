@@ -48,7 +48,8 @@ typedef struct taskInfoBlock
     int cyclesRemaining;
 }taskInfoBlock;
 
-//Function Declarations
+//////Function Declarations//////
+
 /*
 Name: getSimulatorConfiguration
 Purpose: Reads in simulator configurations from provided file
@@ -74,13 +75,18 @@ Purpose: function to pass to I/O thread to make it wait the required time
 void* threadWait(void*);
 
 
-//Main
+//Global variable interrupt to handle interrupts
+int interrupted;
+
+//////Main//////
+
 int main(int argc, char *argv[])
 {
     //Initialize variables
     simulatorStructure simulator;
     taskInfoBlock test;
     processControlBlock *process = NULL;
+	interrupted = 0;
     
     // Check if configuration file isn't provided
     if(argc != 2) {
@@ -92,6 +98,7 @@ int main(int argc, char *argv[])
     	return 0;
     }
     
+	// Read into simulator configuration struct
     // Check if getting simulator configuration failed
     if(!getSimulatorConfiguration(&simulator, argv[1])) {
     
@@ -102,6 +109,7 @@ int main(int argc, char *argv[])
     	return 0;
     }
     
+	// Create process queue
     // Check if creating process queue failed
     if(!createProcessQueue(&process, simulator.processFilePath)) {
     
@@ -115,16 +123,6 @@ int main(int argc, char *argv[])
     //Example of dynamic allocation using c (new is c++)
     //test2.nextPCB = malloc(sizeof(processControlBlock));
     //free(test2.nextPCB);
-    
-    //Initalize Simulated Computer
-    
-        //Read config file
-        
-        //Set config
-        
-        //Read program file
-        
-        //Populate Job Queue
         
     
     //Begin Simulation Loop
@@ -435,4 +433,20 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 
 	// Return true
 	return true;
+}
+
+void* threadWait(void* wait)
+{
+	int waitTime = (int) wait;
+	usleep(waitTime);
+
+	//check if another interrupt is being serviced
+	//if interrupted == 1: wait
+	while (interrupted == 1);
+	
+	//set their own interrupt
+	interrupted = 1;	
+
+	//returns
+	pthread_exit(0);
 }
