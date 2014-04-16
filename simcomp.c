@@ -138,7 +138,10 @@ int main(int argc, char *argv[])
 				-if next task is I/O start the thread, add process to I/O queue, stop loop
 			-else continue
 		}
+		****or****
+		usleep either for maximum allowed time or until process is finished
 		*/
+		
 
         //Perform Context Switch if Necessary
 
