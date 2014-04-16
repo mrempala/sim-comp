@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
     taskInfoBlock test;
     processControlBlock *process = NULL;
 	interrupted = 0;
+	int maxTimeAllowed = 0;
     
     // Check if configuration file isn't provided
     if(argc != 2) {
@@ -122,8 +123,10 @@ int main(int argc, char *argv[])
     
     //Example of dynamic allocation using c (new is c++)
     //test2.nextPCB = malloc(sizeof(processControlBlock));
-    //free(test2.nextPCB);
-        
+    //free(test2.nextPmaxTimeAllowedCB);
+      
+	//assign maxTimeAllowed to processes in microseconds  
+	//--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     //Do we have a pointer to the process queue?
     //Begin Simulation Loop
     while(false) //Jobs remaining?---Are we deleting each when they're done?
