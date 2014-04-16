@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     	return 0;
     }
     
-	// Create process queue
+    // Create process queue
     // Check if creating process queue failed
     if(!createProcessQueue(&process, simulator.processFilePath)) {
     
@@ -120,13 +120,9 @@ int main(int argc, char *argv[])
     	// Return 0
     	return 0;
     }
-    
-    //Example of dynamic allocation using c (new is c++)
-    //test2.nextPCB = malloc(sizeof(processControlBlock));
-    //free(test2.nextPmaxTimeAllowedCB);
       
-	//assign maxTimeAllowed to processes in microseconds  
-	//--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
+    //assign maxTimeAllowed to processes in microseconds  
+    //--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     //Do we have a pointer to the process queue?
     //Begin Simulation Loop
     while(false) //Jobs remaining?---Are we deleting each when they're done?
