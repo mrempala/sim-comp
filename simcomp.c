@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
 {
     //Initialize variables
     simulatorStructure simulator;
-    taskInfoBlock test;
     processControlBlock *process = NULL;
 	interrupted = 0;
 	int maxTimeAllowed = 0;
