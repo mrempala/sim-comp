@@ -80,6 +80,12 @@ Purpose: Sets the current process based on shceduling type
 void setCurrentProcess(struct processControlBlock *currentProcess, struct simulatorStructure simulator);
 
 /*
+Name: deleteProcess
+Purpose: Sets the current process based on shceduling type
+*/
+void deleteProcess(struct processControlBlock *currentProcess);
+
+/*
 Name: threadWait
 Purpose: function to pass to I/O thread to make it wait the required time
 */
@@ -197,21 +203,12 @@ int main(int argc, char *argv[])
         // Log Output Data
         //check if process task is complete
         if( currentProcess->timeRemaining <= 0 )
-                //Check if last PCB
-            if( currentProcess->nextPCB = &currentProcess )
-            {
-                free( currentProcess );
-                currentProcess = NULL;
-            }
-            else()
-            {
-                currentProcess->previousProcess->nextPCB = currentProcess->nextPCB;
-                free( currentProcess );
-            }    
+            deleteProcess( currentProcess );   
             
         // Get next process
-        else
-            currentProcess = setCurrentProcess(currentProcess, simulator);
+        currentProcess = setCurrentProcess(currentProcess, simulator);
+            
+            
     }
     
     
@@ -566,6 +563,24 @@ void setCurrentProcess(struct processControlBlock *currentProcess, struct simula
     else if(strcmp(simulator.processorScheduling, "SRTF") == 0) {
     
         // Implement later
+    }
+}
+
+void deleteProcess(struct processControlBlock *currentProcess)
+{
+    //Check to see if node is last node remaining
+    if( currentProcess->nextPCB == currentProcess)
+    {
+        free( currentProcess );
+        currentProcess = NULL;
+    }
+    
+    //Otherwise delete node and re-link list
+    else
+    {
+        currentProcess->previousPCB->nextPCB = currentProcess->nextPCB;
+        currentProcess->nextPCB->previousPCB = currentProcess->previousPCB;
+        free( currentProcess );
     }
 }
 
