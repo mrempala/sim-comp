@@ -27,6 +27,15 @@ typedef struct simulatorStructure
     char *logType;
 }simulatorStructure;
 
+typedef struct taskInfoBlock
+{
+    //Operation Type/Name
+	char operation;
+    int totalCycles;
+    int cyclesRemaining;
+	char *name;
+}taskInfoBlock;
+
 typedef struct processControlBlock
 {
     pid_t pid;
@@ -37,16 +46,11 @@ typedef struct processControlBlock
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
-    char **jobs;
+    taskInfoBlock **jobs;
+	unsigned int numberOfJobs;
+	unsigned int currentJob;
     struct processControlBlock *nextPCB;
 }processControlBlock;
-
-typedef struct taskInfoBlock
-{
-    //Operation Type/Name
-    int totalCycles;
-    int cyclesRemaining;
-}taskInfoBlock;
 
 //////Function Declarations//////
 
@@ -84,6 +88,7 @@ int main(int argc, char *argv[])
 {
     //Initialize variables
     simulatorStructure simulator;
+    taskInfoBlock test;
     processControlBlock *process = NULL;
 	interrupted = 0;
 	int maxTimeAllowed = 0;
@@ -109,7 +114,7 @@ int main(int argc, char *argv[])
     	return 0;
     }
     
-    // Create process queue
+	// Create process queue
     // Check if creating process queue failed
     if(!createProcessQueue(&process, simulator.processFilePath)) {
     
@@ -119,24 +124,58 @@ int main(int argc, char *argv[])
     	// Return 0
     	return 0;
     }
+    
+	//check scheduling algorithm
+	if( !strcmp(simulator.processorScheduling, "RR") == 0)
+	{
+		printf("Scheduling not implemented\n");
+		return 0;
+	}
+	printf("Implementing RR scheduling\n");
+
+    //Example of dynamic allocation using c (new is c++)
+    //test2.nextPCB = malloc(sizeof(processControlBlock));
+    //free(test2.nextPmaxTimeAllowedCB);
       
-    //assign maxTimeAllowed to processes in microseconds  
-    //--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
+	//assign maxTimeAllowed to processes in microseconds  
+	//--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     //Do we have a pointer to the process queue?
+
+	processControlBlock *currentProcess = &process[0];
+	
     //Begin Simulation Loop
-    while(false) //Jobs remaining?---Are we deleting each when they're done?
+    while(currentProcess != NULL) //Jobs remaining
     {        
         //Process current task by busy waiting
-		// if current process is not blocked for I/O wait, else, skip wait
-		/* while (totalTime < allowedTime)
+		if ( !currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
 		{
-			-check if process task is complete
-				-if it is move to the next task
-					-if there is no next task end the process
-				-if next task is I/O start the thread, add process to I/O queue, stop loop
-			-else continue
+			while (totalTime < allowedTime)
+			{
+				switch(currentProcess->jobs[currentProcess->currentJob][0]) {
+					case 'P':
+					
+						// Sleep
+						usleep(simulator.quantum);
+						currentProcess->timeRemaining- simulator.quantum);
+					break;
+					
+					case 'I':
+						// Create thread
+					break;
+					case 'O':
+						// Create a thread
+					break;
+				}
+				/*
+				-check if process task is complete
+					-if it is move to the next task
+					-get task info
+					-usleep(maxtime or finish)
+					-if next task is I/O start the thread, add process to I/O queue, stop loop
+				-else continue */
+			}
 		}
-
+/*
 		****or****
 		-check how long next process step is
 		-usleep either for maximum allowed time or until process is finished
@@ -394,28 +433,43 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 			fsetpos(input, &cursor);
 		
 			// Allocate memory for jobs in the process
-			tempProcess->jobs = (char**)malloc(sizeof(char*) * (numberOfJobs));
+			tempProcess->jobs = (taskInfoBlock**)malloc(sizeof(taskInfoBlock*) * (numberOfJobs));
+
+			tempProcess->numberOfJobs = numberOfJobs;
+			tempProcess->currentJob = 0;
 			
 			// Go through all jobs in the process
 			for(unsigned int i = 0; i < numberOfJobs; i++) {
+
+				// Get job operation
+				tempProcess->jobs[i]->operation = fgetc(input);
+				
+				// Ignore nest character
+				fgetc(input);
 			
 				// Get current position in file
 				fgetpos(input, &cursor);
 		
 				// Get length of next part in file until a semicolon is found
-				for(length = 0; fgetc(input) != ';'; length++);
+				for(length = 0; fgetc(input) != ')'; length++);
 		
 				// Go back to last position in file
 				fsetpos(input, &cursor);
 				
 				// Allocate memory for current job including a space for a null terminator
-				tempProcess->jobs[i] = (char*)malloc(sizeof(char) * (length + 1));
+				tempProcess->jobs[i] = (taskInfoBlock*)malloc(sizeof(taskInfoBlock) * (length + 1));
 			
 				// Read in current job
-				fread(tempProcess->jobs[i], sizeof(char), length, input);
+				fread(tempProcess->jobs[i]->name, sizeof(char), length, input);
 			
 				// Set last character of current job to null terminator
-				tempProcess->jobs[i][length] = '\0';
+				tempProcess->jobs[i]->name[length] = '\0';
+
+				// Ignore next character
+				fgetc(input);
+
+				// Read in job total cycles
+				fscanf(input, "%u", &tempProcess->jobs[i]->totalCycles);
 				
 				// Ignore semicolon and space characters in file
 				fgetc(input);
