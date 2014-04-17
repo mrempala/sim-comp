@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 					
 						// Sleep
 						usleep(simulator.quantum);
-						currentProcess->timeRemaining- simulator.quantum);
+						currentProcess->timeRemaining- simulator.quantum;
 					break;
 					
 					case 'I':
