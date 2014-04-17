@@ -658,10 +658,6 @@ void* threadWait(void* threadInfo)
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
 
-    //calculate waitTime
-    int waitTime = (info->processCycles * info->quantumTime * 1000);
-    usleep(waitTime);
-
     // Log process completion
     
     
