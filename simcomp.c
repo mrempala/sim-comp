@@ -609,13 +609,19 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
     //Initalize variables
     processControlBlock *temp = NULL;
     
+    //Make sure currentProcess is not NULL
+    if( currentProcess == NULL )
+    {
+        return NULL;
+    }
+    
     //Check to see if node is the last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
         //If so, delete it
-        temp = currentProcess;
         free( currentProcess );
         currentProcess = NULL;
+        return NULL;
     }
     
     //Otherwise re-link the list and then delete it
