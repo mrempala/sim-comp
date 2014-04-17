@@ -54,8 +54,10 @@ typedef struct processControlBlock
     time_t timeRemaining;
     //new var needs to hold thread info, if != something the thread is not completed
     int priority;
-    //List of Actions/Operations (waiting for I/O)
+    //waiting for I/O
     int waitFlag;
+    
+    //List of Actions
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -106,6 +108,7 @@ void* threadWait(void*);
 int main(int argc, char *argv[])
 {
     //Initialize variables
+    interrupted = 0;
     simulatorStructure simulator;
     taskInfoBlock test;
     processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
@@ -664,6 +667,9 @@ void* threadWait(void* threadInfo)
     
     //Set interrupt for itself
     interrupted = 1;    
+
+    //alert process to its completion
+    
 
     //Returns
     pthread_exit(0);
