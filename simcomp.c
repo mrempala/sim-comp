@@ -1,4 +1,5 @@
 ////////////// Header Files ///////////////////
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -7,10 +8,10 @@
 #include <string.h>
 #include <pthread.h>
 #include "cStyleList.h"
-///////////// Global Declarations /////////////////
 
-//Global variable to handle interrupts
-int interrupted;
+///////////// Global Declarations /////////////
+
+int interrupted; //Global var to handle interrupts
 
 typedef struct simulatorStructure
 {
@@ -81,17 +82,17 @@ void setCurrentProcess(struct processControlBlock **currentProcess, struct simul
 
 /*
 Name: deleteProcess
-Purpose: Sets the current process based on shceduling type
+Purpose: Deletes the process given and re-links the circularly linked list
 */
 processControlBlock * deleteProcess(struct processControlBlock *currentProcess);
 
 /*
 Name: threadWait
-Purpose: function to pass to I/O thread to make it wait the required time
+Purpose: Function to pass to I/O thread to make it wait the required time
 */
 void* threadWait(void*);
 
-//////Main//////
+//////////////// Main //////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
@@ -109,37 +110,37 @@ int main(int argc, char *argv[])
     init(&log);
     
     // Check if configuration file isn't provided
-    if(argc != 2) {
-    
+    if(argc != 2) 
+    {
         // Display error
         puts("Error: Invalid parameters");
         
-        // Return 0
-        return 0;
+        // End program with error
+        return 1;
     }
     
     // Read into simulator configuration struct
     // Check if getting simulator configuration failed
-    if(!getSimulatorConfiguration(&simulator, argv[1])) {
-    
+    if(!getSimulatorConfiguration(&simulator, argv[1])) 
+    {
         // Display error
         puts("Error: Invalid configuration file");
         
-        // Return 0
-        return 0;
+        // End program with error
+        return 1;
     }
     
     printf("Q: %d P: %d\n", simulator.quantum, simulator.processorCycleTime);
     maxTimeProcessing = (simulator.quantum * simulator.processorCycleTime * 1000);
     // Create process queue
     // Check if creating process queue failed
-    if(!createProcessQueue(&process, simulator.processFilePath)) {
-    
+    if(!createProcessQueue(&process, simulator.processFilePath)) 
+    {
         // Display error
         puts("Error: Failed to create job queue");
         
-        // Return 0
-        return 0;
+        // End program with error
+        return 1;
     }
     
     // Set current process
@@ -159,8 +160,8 @@ int main(int argc, char *argv[])
     //maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     insert(&log, "Testing Log File\n");
     
-    //Begin Simulation Loop
-    while(currentProcess != NULL) //Jobs remaining
+    //Begin Simulation Loop and go until no processes remain
+    while(currentProcess != NULL)
     {   
         currentProcess->arrivalTime = time(NULL);
         
@@ -222,14 +223,13 @@ int main(int argc, char *argv[])
     }
     
     
-    //Print output to screen, file, or both
-    // if to monitor or both print to monitor
+    //Print output to monitor if specified by configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         print(&log);
     }
     
-    // if to file or both print to file    
+    //Print output to log file if specified by configuration file
     if(strcmp(simulator.logType, "Log to File") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         output = fopen("Log", "w");
@@ -247,7 +247,6 @@ int main(int argc, char *argv[])
     			fprintf(output, "%s\n", tempNode->dataItem);
     		}
     	}
-
         fclose(output);
     }
     
