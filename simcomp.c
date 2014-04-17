@@ -650,21 +650,18 @@ void* threadWait(void* threadInfo)
 {
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*) threadInfo;
-<<<<<<< HEAD
     
     //calculate waitTime
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
-    
-=======
 
     //calculate waitTime
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
 
     // Log process completion
-
->>>>>>> 82bf6f7d4f8497d27d9e3b9432c61e86574980c7
+    
+    
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
