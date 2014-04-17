@@ -1,4 +1,4 @@
-//Header Files
+////////////// Header Files ///////////////////
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -7,10 +7,10 @@
 #include <string.h>
 #include <pthread.h>
 
-//Global
+///////////// Global Declarations /////////////////
 
-//We should probably place structs in files outside this one
-//along with any data structures.
+//Global variable to handle interrupts
+int interrupted;
 
 typedef struct simulatorStructure
 {
@@ -52,7 +52,7 @@ typedef struct processControlBlock
     struct processControlBlock *nextPCB;
 }processControlBlock;
 
-//////Function Declarations//////
+////// Function Declarations //////
 
 /*
 Name: getSimulatorConfiguration
@@ -77,10 +77,6 @@ Name: threadWait
 Purpose: function to pass to I/O thread to make it wait the required time
 */
 void* threadWait(void*);
-
-
-//Global variable interrupt to handle interrupts
-int interrupted;
 
 //////Main//////
 
@@ -132,16 +128,12 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	printf("Implementing RR scheduling\n");
-
-    //Example of dynamic allocation using c (new is c++)
-    //test2.nextPCB = malloc(sizeof(processControlBlock));
-    //free(test2.nextPmaxTimeAllowedCB);
       
-	//assign maxTimeAllowed to processes in microseconds  
-	//--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
+    //assign maxTimeAllowed to processes in microseconds  
+    //--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     //Do we have a pointer to the process queue?
 
-	processControlBlock *currentProcess = &process[0];
+    processControlBlock *currentProcess = &process[0];
 	
     //Begin Simulation Loop
     while(currentProcess != NULL) //Jobs remaining
@@ -186,7 +178,7 @@ int main(int argc, char *argv[])
 		// if current process is finished delete it
         // Perform Context Switch
 
-        //	Log Output Data
+        // Log Output Data
     }
     
     //Print output to screen, file, or both
