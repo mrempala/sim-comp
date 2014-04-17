@@ -50,6 +50,7 @@ typedef struct processControlBlock
     unsigned int numberOfJobs;
     unsigned int currentJob;
     struct processControlBlock *nextPCB;
+    struct processControlBlock *previousPCB;
 }processControlBlock;
 
 ////// Function Declarations //////
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     //Initialize variables
     simulatorStructure simulator;
     taskInfoBlock test;
-    processControlBlock *process = NULL, *currentProcess = NULL;
+    processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
     interrupted = 0;
     int maxTimeAllowed = 0;
     
@@ -155,8 +156,14 @@ int main(int argc, char *argv[])
                 case 'P':
                 
                     // Sleep
-                    usleep(simulator.quantum);
-                    currentProcess->timeRemaining- simulator.quantum;
+                    if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
+                        usleep(simulator.quantum);
+                    else
+                         usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                         
+                         
+                    jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
+                    currentProcess->timeRemaining - simulator.quantum;
                 break;
                 
                 case 'I':
@@ -167,9 +174,11 @@ int main(int argc, char *argv[])
                 break;
             }
             
-            //check if process task is complete
-                //if it is move to the next task
-                //get task info
+            
+            
+                //Delete by iterating through circularly linked list
+                
+                
                 //usleep(maxtime or finish)
                 //if next task is I/O start the thread, add process to I/O queue, stop loop
             //else continue 
@@ -186,9 +195,23 @@ int main(int argc, char *argv[])
         // Perform Context Switch
 
         // Log Output Data
-        
-        // Set current process
-           currentProcess = setCurrentProcess(currentProcess, simulator);
+        //check if process task is complete
+        if( currentProcess->timeRemaining <= 0 )
+                //Check if last PCB
+            if( currentProcess->nextPCB = &currentProcess )
+            {
+                free( currentProcess );
+                currentProcess = NULL;
+            }
+            else()
+            {
+                currentProcess->previousProcess->nextPCB = currentProcess->nextPCB;
+                free( currentProcess );
+            }    
+            
+        // Get next process
+        else
+            currentProcess = setCurrentProcess(currentProcess, simulator);
     }
     
     //Print output to screen, file, or both
@@ -278,6 +301,11 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
                 // Set last character of processor scheduling to null terminator
                 simulator->processorScheduling[length] = '\0';
+                
+                // Set quantum to big number if FIFO
+                if(strcmp( simulator->processorScheduling, "FIFO") == 0)
+                
+                    simulator->quantum = 100000;
             }
             
             // Otherwise check if line is process file path
@@ -490,13 +518,21 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             
                 tempProcess->timeRemaining += tempProcess->jobs[i].totalCycles;
             
-            // Set previous process
+            // Set previous process to current process
             previousProcess = tempProcess;
+            
         }
     }
     
     // Make process queue circular
     previousProcess->nextPCB = *process;
+    
+    // Set prebvious PCB
+    while(process->previousPCB == NULL) {
+        tempProcess = process;
+        process = process->nextPCB;
+        process->previousPCB = tempProcess;
+    }
     
     // Close file
     fclose(input);
