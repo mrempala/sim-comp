@@ -1,7 +1,7 @@
 PROG = "Sim-Comp"
 CC = gcc
 SRCS = simcomp.c
-CFLAGS = -Wall -std=c99
+CFLAGS = -w -g -std=c99
 
 all: $(PROG)
 

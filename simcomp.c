@@ -77,13 +77,13 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 Name: setCurrentProcess
 Purpose: Sets the current process based on shceduling type
 */
-void setCurrentProcess(struct processControlBlock *currentProcess, struct simulatorStructure simulator);
+void setCurrentProcess(struct processControlBlock **currentProcess, struct simulatorStructure simulator);
 
 /*
 Name: deleteProcess
 Purpose: Sets the current process based on shceduling type
 */
-void deleteProcess(struct processControlBlock *currentProcess);
+processControlBlock * deleteProcess(struct processControlBlock *currentProcess);
 
 /*
 Name: threadWait
@@ -100,9 +100,10 @@ int main(int argc, char *argv[])
     taskInfoBlock test;
     processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
     interrupted = 0;
-    int maxTimeAllowed = 0;
+    int maxTimeProcessing = 0;
     List log;
     FILE *output;
+    ListNode *tempNode = NULL;
     
     // initializes log
     init(&log);
@@ -128,6 +129,8 @@ int main(int argc, char *argv[])
         return 0;
     }
     
+    printf("Q: %d P: %d\n", simulator.quantum, simulator.processorCycleTime);
+    maxTimeProcessing = (simulator.quantum * simulator.processorCycleTime * 1000);
     // Create process queue
     // Check if creating process queue failed
     if(!createProcessQueue(&process, simulator.processFilePath)) {
@@ -140,8 +143,8 @@ int main(int argc, char *argv[])
     }
     
     // Set current process
-    currentProcess = setCurrentProcess(currentProcess, simulator);
-    current->arrivalTime = time(NULL);
+    currentProcess = &process[0];
+    currentProcess->arrivalTime = time(NULL);
     
     /* Display all jobs
     while(process != NULL) {
@@ -154,27 +157,41 @@ int main(int argc, char *argv[])
     
     //assign maxTimeAllowed to processes in microseconds  
     //maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
+    insert(&log, "Testing Log File\n");
     
     //Begin Simulation Loop
     while(currentProcess != NULL) //Jobs remaining
-    {    
-        current->arrivalTime = time(NULL);
+    {   
+        currentProcess->arrivalTime = time(NULL);
         
         //Process current task by busy waiting
         if(!currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
         {
-            switch(currentProcess->jobs[currentProcess->currentJob].operation) {
+            switch(currentProcess->jobs[currentProcess->currentJob].operation) 
+            {
                 case 'P':
-                
                     // Sleep
+                    printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                    printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+
+                    //if the quantum time is less than the remaining job time, take the entire quantum
                     if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
-                        usleep(simulator.quantum);
+                    {
+                        printf("Time Processing %d\n", maxTimeProcessing);
+                        usleep(maxTimeProcessing);
+                    }
+                    //if the quantum is greater than required time, finish the job
                     else
-                         usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                    {
+                         printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                         usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     }
                          
                          
-                    jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
-                    currentProcess->timeRemaining - simulator.quantum;
+                    currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
+                    currentProcess->timeRemaining -= simulator.quantum;
+                    printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                    printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
                 break;
                 
                 case 'I':
@@ -186,52 +203,40 @@ int main(int argc, char *argv[])
             }
             
             
-            
-                //Delete by iterating through circularly linked list
-                
-                
-                //usleep(maxtime or finish)
-                //if next task is I/O start the thread, add process to I/O queue, stop loop
-            //else continue 
         }
-/*
-        ****or****
-        -check how long next process step is
-        -usleep either for maximum allowed time or until process is finished
-        -if there is time leftover subtract from max time and continue
-
-        */
+        //if the currentProcess's job is finished, delete it
+        if( currentProcess->jobs[currentProcess->currentJob].cyclesRemaining <= 0 )
+        {
+            if(currentProcess->currentJob < currentProcess->numberOfJobs)
+                currentProcess->currentJob++;
+        }
         
-        // if current process is finished delete it
-        // Perform Context Switch
-
-        // Log Output Data
-        //check if process task is complete
+        //check if process task is totally complete
         if( currentProcess->timeRemaining <= 0 )
-            deleteProcess( currentProcess );   
+            currentProcess = deleteProcess( currentProcess );   
             
         // Get next process
-        currentProcess = setCurrentProcess(currentProcess, simulator);
-            
-            
+        else 
+            setCurrentProcess(&currentProcess, simulator);
+                        
     }
     
     
     //Print output to screen, file, or both
     // if to monitor or both print to monitor
-    if(strcmp(simulator->logType, "Log to Monitor") == 0 || strcmp(simulator->logType, "Log to Both") == 0)
+    if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         print(&log);
     }
     
     // if to file or both print to file    
-    if(strcmp(simulator->logType, "Log to File") == 0 || strcmp(simulator->logType, "Log to Both") == 0)
+    if(strcmp(simulator.logType, "Log to File") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         output = fopen("Log", "w");
 
-    	if(!empty(&list))
+    	if(!empty(&log))
     	{
-    		tempNode = list.head;
+    		tempNode = log.head;
     
     		fprintf(output, "%s\n", tempNode->dataItem);
     
@@ -557,11 +562,11 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     // Make process queue circular
     previousProcess->nextPCB = *process;
     
-    // Set prebvious PCB
-    while(process->previousPCB == NULL) {
-        tempProcess = process;
-        process = process->nextPCB;
-        process->previousPCB = tempProcess;
+    // Set previous PCB
+    while((*process)->previousPCB == NULL) {
+        tempProcess = *process;
+        *process = (*process)->nextPCB;
+        (*process)->previousPCB = tempProcess;
     }
     
     // Close file
@@ -571,20 +576,20 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     return true;
 }
 
-void setCurrentProcess(struct processControlBlock *currentProcess, struct simulatorStructure simulator) {
+void setCurrentProcess(struct processControlBlock **currentProcess, struct simulatorStructure simulator) {
 
     // Check if process scheduling is FIFO
     if(strcmp(simulator.processorScheduling, "FIFO") == 0)
     
         // Set current process to next process
-        currentProcess = currentProcess->nextPCB;
+        (*currentProcess) = (*currentProcess)->nextPCB;
     
     // Otherwise check if process scheduling is RR
     else if(strcmp(simulator.processorScheduling, "RR") == 0)
-    
+    {
         // Set current process to next process
-        currentProcess = currentProcess->nextPCB;
-    
+        (*currentProcess) = (*currentProcess)->nextPCB;
+    }
     // Otherwise check if process scheduling is SJF
     else if(strcmp(simulator.processorScheduling, "SJF") == 0) {
     
@@ -598,11 +603,13 @@ void setCurrentProcess(struct processControlBlock *currentProcess, struct simula
     }
 }
 
-void deleteProcess(struct processControlBlock *currentProcess)
+processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 {
+    processControlBlock *temp = NULL;
     //Check to see if node is last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
+        temp = currentProcess;
         free( currentProcess );
         currentProcess = NULL;
     }
@@ -612,8 +619,11 @@ void deleteProcess(struct processControlBlock *currentProcess)
     {
         currentProcess->previousPCB->nextPCB = currentProcess->nextPCB;
         currentProcess->nextPCB->previousPCB = currentProcess->previousPCB;
+        temp = currentProcess->nextPCB;
         free( currentProcess );
     }
+    
+    return temp;
 }
 
 void* threadWait(void* wait)
