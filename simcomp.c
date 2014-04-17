@@ -30,10 +30,10 @@ typedef struct simulatorStructure
 typedef struct taskInfoBlock
 {
     //Operation Type/Name
-	char operation;
+    char operation;
     int totalCycles;
     int cyclesRemaining;
-	char *name;
+    char *name;
 }taskInfoBlock;
 
 typedef struct processControlBlock
@@ -42,13 +42,13 @@ typedef struct processControlBlock
     pid_t parentPid;
     time_t arrivalTime;
     time_t timeRemaining;
-	//new var needs to hold thread info, if != something the thread is not completed
+    //new var needs to hold thread info, if != something the thread is not completed
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
     taskInfoBlock *jobs;
-	unsigned int numberOfJobs;
-	unsigned int currentJob;
+    unsigned int numberOfJobs;
+    unsigned int currentJob;
     struct processControlBlock *nextPCB;
 }processControlBlock;
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     while(currentProcess != NULL) //Jobs remaining
     {        
         //Process current task by busy waiting
-		if ( !currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
+		if (!currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
 		{
 			while (totalTime < allowedTime)
 			{
@@ -483,6 +483,11 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 			
 			// Ignore character in file until next group
 			while(fgetc(input) != ' ');
+			
+			// Set process's time remaining
+			for(unsigned int i = 0; i < numberOfJobs; i++)
+			
+				tempProcess->timeRemaining += tempProcess->jobs[i].totalCycles;
 			
 			// Set previous process
 			previousProcess = tempProcess;
