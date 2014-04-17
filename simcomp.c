@@ -46,7 +46,7 @@ typedef struct processControlBlock
     int priority;
     //List of Actions/Operations (Busy waiting or I/O)
     int busyWaitFlag;
-    taskInfoBlock **jobs;
+    taskInfoBlock *jobs;
 	unsigned int numberOfJobs;
 	unsigned int currentJob;
     struct processControlBlock *nextPCB;
@@ -73,6 +73,12 @@ Purpose: Creates process queue from process file
 bool createProcessQueue(struct processControlBlock **process, const char *processFilePath);
 
 /*
+Name: setCurrentProcess
+Purpose: Sets the current process based on shceduling type
+*/
+void setCurrentProcess(struct processControlBlock *currentProcess, struct simulatorStructure simulator);
+
+/*
 Name: threadWait
 Purpose: function to pass to I/O thread to make it wait the required time
 */
@@ -85,7 +91,7 @@ int main(int argc, char *argv[])
     //Initialize variables
     simulatorStructure simulator;
     taskInfoBlock test;
-    processControlBlock *process = NULL;
+    processControlBlock *process = NULL, *currentProcess = NULL;
 	interrupted = 0;
 	int maxTimeAllowed = 0;
     
@@ -121,19 +127,21 @@ int main(int argc, char *argv[])
     	return 0;
     }
     
-	//check scheduling algorithm
-	if( !strcmp(simulator.processorScheduling, "RR") == 0)
-	{
-		printf("Scheduling not implemented\n");
-		return 0;
-	}
-	printf("Implementing RR scheduling\n");
-      
+    // Set current process
+    currentProcess = setCurrentProcess(currentProcess, simulator);
+    
+    /* Display all jobs
+    while(process != NULL) {
+        puts("Process:");
+            for(unsigned int i = 0; i < process->numberOfJobs; i++) {
+            printf("Job %d\n%c - %s - %d - %d\n", i, process->jobs[i].operation, process->jobs[i].name, process->jobs[i].totalCycles, process->jobs[i].cyclesRemaining);
+        }
+        process = process->nextPCB;
+    }*/
+    
     //assign maxTimeAllowed to processes in microseconds  
     //--maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
-    //Do we have a pointer to the process queue?
-
-    processControlBlock *currentProcess = &process[0];
+    //Do we have a pointer to the process queue
 	
     //Begin Simulation Loop
     while(currentProcess != NULL) //Jobs remaining
@@ -179,6 +187,9 @@ int main(int argc, char *argv[])
         // Perform Context Switch
 
         // Log Output Data
+        
+        // Set current process
+   	 currentProcess = setCurrentProcess(currentProcess, simulator);
     }
     
     //Print output to screen, file, or both
@@ -425,16 +436,17 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 			fsetpos(input, &cursor);
 		
 			// Allocate memory for jobs in the process
-			tempProcess->jobs = (taskInfoBlock**)malloc(sizeof(taskInfoBlock*) * (numberOfJobs));
-
+			tempProcess->jobs = (taskInfoBlock*)malloc(sizeof(taskInfoBlock) * (numberOfJobs));
+			
+			// Set job details of process
 			tempProcess->numberOfJobs = numberOfJobs;
 			tempProcess->currentJob = 0;
 			
 			// Go through all jobs in the process
 			for(unsigned int i = 0; i < numberOfJobs; i++) {
-
+			
 				// Get job operation
-				tempProcess->jobs[i]->operation = fgetc(input);
+				tempProcess->jobs[i].operation = fgetc(input);
 				
 				// Ignore nest character
 				fgetc(input);
@@ -448,20 +460,21 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 				// Go back to last position in file
 				fsetpos(input, &cursor);
 				
-				// Allocate memory for current job including a space for a null terminator
-				tempProcess->jobs[i] = (taskInfoBlock*)malloc(sizeof(taskInfoBlock) * (length + 1));
+				// Allocate memory for current jobs's name including space for a null terminator
+				tempProcess->jobs[i].name = (char*)malloc(sizeof(char) * (length + 1));
 			
 				// Read in current job
-				fread(tempProcess->jobs[i]->name, sizeof(char), length, input);
+				fread(tempProcess->jobs[i].name, sizeof(char), length, input);
 			
 				// Set last character of current job to null terminator
-				tempProcess->jobs[i]->name[length] = '\0';
+				tempProcess->jobs[i].name[length] = '\0';
 
 				// Ignore next character
 				fgetc(input);
 
-				// Read in job total cycles
-				fscanf(input, "%u", &tempProcess->jobs[i]->totalCycles);
+				// Read in job cycles
+				fscanf(input, "%u", &tempProcess->jobs[i].totalCycles);
+				tempProcess->jobs[i].cyclesRemaining = tempProcess->jobs[i].totalCycles;
 				
 				// Ignore semicolon and space characters in file
 				fgetc(input);
@@ -484,6 +497,27 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
 
 	// Return true
 	return true;
+}
+
+void setCurrentProcess(struct processControlBlock *currentProcess, struct simulatorStructure simulator) {
+
+	// Check if process scheduling is FIFO
+	if(strcmp(simulator.processorScheduling, "FIFO") == 0)
+	
+		// Set current process to next process
+		currentProcess = currentProcess->nextPCB;
+	
+	// Otherwise check if process scheduling is RR
+	else if(strcmp(simulator.processorScheduling, "RR") == 0)
+	
+		// Set current process to next process
+		currentProcess = currentProcess->nextPCB;
+	
+	// Otherwise check if process scheduling is SJF
+	else if(strcmp(simulator.processorScheduling, "SJF") == 0) {
+	
+		// Implement later
+	}
 }
 
 void* threadWait(void* wait)
