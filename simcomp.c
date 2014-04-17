@@ -262,10 +262,8 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
     unsigned int length;
     char *line;
     
-    // Check if file doesn't exist
+    // Return failure if the file doesn't exist
     if((input = fopen(configurationFilePath, "r")) == NULL)
-    
-        // Return false
         return false;
     
     // Go through file
@@ -419,12 +417,10 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
         fgetc(input);
     }
     
-    //Test
-    
     // Close file
     fclose(input);
     
-    // Return true
+    // Return success
     return true;
 }
 
@@ -448,10 +444,8 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     unsigned int numberOfJobs, length;
     processControlBlock *tempProcess = NULL , *previousProcess = NULL;
     
-    // Check if file doesn't exist
+    // Return failure if the file doesn't exist
     if((input = fopen(processFilePath, "r")) == NULL)
-    
-        // Return false
         return false;
     
     // Go through file
@@ -571,7 +565,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     // Close file
     fclose(input);
 
-    // Return true
+    // Return success
     return true;
 }
 
@@ -579,9 +573,10 @@ void setCurrentProcess(struct processControlBlock **currentProcess, struct simul
 
     // Check if process scheduling is FIFO
     if(strcmp(simulator.processorScheduling, "FIFO") == 0)
-    
+    {
         // Set current process to next process
         (*currentProcess) = (*currentProcess)->nextPCB;
+    }
     
     // Otherwise check if process scheduling is RR
     else if(strcmp(simulator.processorScheduling, "RR") == 0)
@@ -590,22 +585,24 @@ void setCurrentProcess(struct processControlBlock **currentProcess, struct simul
         (*currentProcess) = (*currentProcess)->nextPCB;
     }
     // Otherwise check if process scheduling is SJF
-    else if(strcmp(simulator.processorScheduling, "SJF") == 0) {
-    
+    else if(strcmp(simulator.processorScheduling, "SJF") == 0) 
+    {
         // Implement later
     }
     
     // Otherwise check if process scheduling is SRTF
-    else if(strcmp(simulator.processorScheduling, "SRTF") == 0) {
-    
+    else if(strcmp(simulator.processorScheduling, "SRTF") == 0) 
+    {
         // Implement later
     }
 }
 
 processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 {
+    //Initalize variables
     processControlBlock *temp = NULL;
-    //Check to see if node is last node remaining
+    
+    //Check to see if node is the last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
         temp = currentProcess;
@@ -613,7 +610,7 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
         currentProcess = NULL;
     }
     
-    //Otherwise delete node and re-link list
+    //Otherwise delete the node and re-link list
     else
     {
         currentProcess->previousPCB->nextPCB = currentProcess->nextPCB;
@@ -627,16 +624,17 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 
 void* threadWait(void* wait)
 {
+    //Initalize variables
     int waitTime = (int) wait;
     usleep(waitTime);
 
-    //check if another interrupt is being serviced
-    //if interrupted == 1: wait
+    //If there is another interrupt,
+    // wait for it to be serviced
     while (interrupted == 1);
     
-    //set their own interrupt
+    //Set interrupt for itself
     interrupted = 1;    
 
-    //returns
+    //Returns
     pthread_exit(0);
 }
