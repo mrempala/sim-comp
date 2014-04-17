@@ -1,4 +1,4 @@
-////////////// Header Files ///////////////////
+//////////////////////// Header Files ///////////////////////////////////
 
 #include <stdio.h>
 #include <unistd.h>
@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include "cStyleList.h"
 
-///////////// Global Declarations /////////////
+//////////////////// Global Declarations ////////////////////////////////
 
 int interrupted; //Global var to handle interrupts
 
@@ -54,7 +54,7 @@ typedef struct processControlBlock
     struct processControlBlock *previousPCB;
 }processControlBlock;
 
-////// Function Declarations //////
+///////////////////// Function Declarations //////////////////////////////////
 
 /*
 Name: getSimulatorConfiguration
@@ -92,7 +92,7 @@ Purpose: Function to pass to I/O thread to make it wait the required time
 */
 void* threadWait(void*);
 
-//////////////// Main //////////////////////////////////////
+////////////////////////////////// Main //////////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
@@ -202,8 +202,6 @@ int main(int argc, char *argv[])
                     // Create a thread
                 break;
             }
-            
-            
         }
         
         //If the currentProcess's job is finished, delete it
@@ -262,7 +260,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-////////////// Function Implementations ////////////////////////
+/////////////////////// Function Implementations //////////////////////////////////
 
 bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char *configurationFilePath) {
 
@@ -346,7 +344,6 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
                 
                 // Set quantum to big number if FIFO
                 if(strcmp( simulator->processorScheduling, "FIFO") == 0)
-                
                     simulator->quantum = 100000;
             }
             
@@ -615,12 +612,13 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
     //Check to see if node is the last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
+        //If so, delete it
         temp = currentProcess;
         free( currentProcess );
         currentProcess = NULL;
     }
     
-    //Otherwise delete the node and re-link list
+    //Otherwise re-link the list and then delete it
     else
     {
         currentProcess->previousPCB->nextPCB = currentProcess->nextPCB;
@@ -639,7 +637,7 @@ void* threadWait(void* wait)
     usleep(waitTime);
 
     //If there is another interrupt,
-    // wait for it to be serviced
+    //wait for it to be serviced
     while (interrupted == 1);
     
     //Set interrupt for itself
