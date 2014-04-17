@@ -48,8 +48,7 @@ typedef struct taskInfoBlock
 
 typedef struct processControlBlock
 {
-    pid_t pid;
-    pid_t parentPid;
+    int pid;
     time_t arrivalTime;
     time_t timeRemaining;
     //new var needs to hold thread info, if != something the thread is not completed
@@ -654,13 +653,18 @@ void* threadWait(void* threadInfo)
 {
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*) threadInfo;
+    
+    //calculate waitTime
+    int waitTime = (info->processCycles * info->quantumTime * 1000);
+    usleep(waitTime);
 
     //calculate waitTime
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
 
     // Log process completion
-
+    
+    
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
