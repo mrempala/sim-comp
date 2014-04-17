@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
-
+#include "cStyleList.h"
 ///////////// Global Declarations /////////////////
 
 //Global variable to handle interrupts
@@ -95,6 +95,11 @@ int main(int argc, char *argv[])
     processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
     interrupted = 0;
     int maxTimeAllowed = 0;
+    List log;
+    FILE *output;
+    
+    // initializes log
+    init(&log);
     
     // Check if configuration file isn't provided
     if(argc != 2) {
@@ -216,6 +221,33 @@ int main(int argc, char *argv[])
     
     
     //Print output to screen, file, or both
+    // if to monitor or both print to monitor
+    if(strcmp(simulator->logType, "Log to Monitor") == 0 || strcmp(simulator->logType, "Log to Both") == 0)
+    {
+        print(&log);
+    }
+    
+    // if to file or both print to file    
+    if(strcmp(simulator->logType, "Log to File") == 0 || strcmp(simulator->logType, "Log to Both") == 0)
+    {
+        output = fopen("Log", "w");
+
+    	if(!empty(&list))
+    	{
+    		tempNode = list.head;
+    
+    		fprintf(output, "%s\n", tempNode->dataItem);
+    
+    		while(tempNode->next != 0)
+    		{
+    			tempNode = tempNode->next;
+    
+    			fprintf(output, "%s\n", tempNode->dataItem);
+    		}
+    	}
+
+        fclose(output);
+    }
     
     return 0;
 }
