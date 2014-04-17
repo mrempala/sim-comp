@@ -92,8 +92,8 @@ int main(int argc, char *argv[])
     simulatorStructure simulator;
     taskInfoBlock test;
     processControlBlock *process = NULL, *currentProcess = NULL;
-	interrupted = 0;
-	int maxTimeAllowed = 0;
+    interrupted = 0;
+    int maxTimeAllowed = 0;
     
     // Check if configuration file isn't provided
     if(argc != 2) {
@@ -147,33 +147,30 @@ int main(int argc, char *argv[])
     while(currentProcess != NULL) //Jobs remaining
     {        
         //Process current task by busy waiting
-		if (!currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
+		if(!currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
 		{
-			while (totalTime < allowedTime)
-			{
-				switch(currentProcess->jobs[currentProcess->currentJob][0]) {
-					case 'P':
-					
-						// Sleep
-						usleep(simulator.quantum);
-						currentProcess->timeRemaining- simulator.quantum;
-					break;
-					
-					case 'I':
-						// Create thread
-					break;
-					case 'O':
-						// Create a thread
-					break;
-				}
-				/*
-				-check if process task is complete
-					-if it is move to the next task
-					-get task info
-					-usleep(maxtime or finish)
-					-if next task is I/O start the thread, add process to I/O queue, stop loop
-				-else continue */
+			switch(currentProcess->jobs[currentProcess->currentJob][0]) {
+				case 'P':
+				
+					// Sleep
+					usleep(simulator.quantum);
+					currentProcess->timeRemaining- simulator.quantum;
+				break;
+				
+				case 'I':
+					// Create thread
+				break;
+				case 'O':
+					// Create a thread
+				break;
 			}
+			/*
+			-check if process task is complete
+				-if it is move to the next task
+				-get task info
+				-usleep(maxtime or finish)
+				-if next task is I/O start the thread, add process to I/O queue, stop loop
+			-else continue */
 		}
 /*
 		****or****
@@ -520,6 +517,12 @@ void setCurrentProcess(struct processControlBlock *currentProcess, struct simula
 	
 	// Otherwise check if process scheduling is SJF
 	else if(strcmp(simulator.processorScheduling, "SJF") == 0) {
+	
+		// Implement later
+	}
+	
+	// Otherwise check if process scheduling is SRTF
+	else if(strcmp(simulator.processorScheduling, "SRTF") == 0) {
 	
 		// Implement later
 	}
