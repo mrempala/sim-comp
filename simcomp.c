@@ -54,8 +54,8 @@ typedef struct processControlBlock
     time_t timeRemaining;
     //new var needs to hold thread info, if != something the thread is not completed
     int priority;
-    //List of Actions/Operations (Busy waiting or I/O)
-    int busyWaitFlag;
+    //List of Actions/Operations (waiting for I/O)
+    int waitFlag;
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
         currentProcess->arrivalTime = time(NULL);
         
         //Process current task by busy waiting
-        if(!currentProcess->busyWaitFlag ) //is not blocked for I/O wait, else, skip wait
+        if(!currentProcess->waitFlag ) //is not blocked for I/O wait, else, skip wait
         {
             switch(currentProcess->jobs[currentProcess->currentJob].operation) 
             {
@@ -650,10 +650,14 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 void* threadWait(void* threadInfo)
 {
     //Initalize variables
-    threadInfo *info = (threadInfo*) threadInfo;
+    struct threadInfo *info = (struct threadInfo*) threadInfo;
+
     //calculate waitTime
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
+
+    // Log process completion
+
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
