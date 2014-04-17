@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
             currentProcess = setCurrentProcess(currentProcess, simulator);
     }
     
+    
     //Print output to screen, file, or both
     
     return 0;
