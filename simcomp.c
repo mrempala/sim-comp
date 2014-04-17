@@ -647,12 +647,13 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
     return temp;
 }
 
-void* threadWait(void* wait)
+void* threadWait(void* threadInfo)
 {
     //Initalize variables
-    int waitTime = (int) wait;
+    threadInfo *info = (threadInfo*) threadInfo;
+    //calculate waitTime
+    int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
-
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
