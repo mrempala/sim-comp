@@ -13,15 +13,6 @@
 
 int interrupted; //Global var to handle interrupts
 
-typedef struct threadInfo
-{
-    int processPID;
-    char *processJob;
-    char processType;
-    int processCycles;
-    int quantumTime;
-}threadInfo;
-
 typedef struct simulatorStructure
 {
     char *version;
@@ -64,6 +55,15 @@ typedef struct processControlBlock
     struct processControlBlock *previousPCB;
 }processControlBlock;
 
+typedef struct threadInfo
+{
+    int processPID;
+    struct processControlBlock* process;
+    char *processJob;
+    char processType;
+    int processCycles;
+    int quantumTime;
+}threadInfo;
 ///////////////////// Function Declarations //////////////////////////////////
 
 /*
