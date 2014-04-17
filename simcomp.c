@@ -358,6 +358,8 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
 		fgetc(input);
 	}
 	
+	//Test
+	
 	// Close file
 	fclose(input);
 	
