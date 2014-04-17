@@ -205,55 +205,65 @@ int main(int argc, char *argv[])
             
             
         }
-        //if the currentProcess's job is finished, delete it
+        
+        //If the currentProcess's job is finished, delete it
         if( currentProcess->jobs[currentProcess->currentJob].cyclesRemaining <= 0 )
         {
             if(currentProcess->currentJob < currentProcess->numberOfJobs)
                 currentProcess->currentJob++;
         }
         
-        //check if process task is totally complete
+        //Delete the process if it is done
         if( currentProcess->timeRemaining <= 0 )
             currentProcess = deleteProcess( currentProcess );   
             
-        // Get next process
+        //Get the next process
         else 
             setCurrentProcess(&currentProcess, simulator);
                         
     }
     
     
-    //Print output to monitor if specified by configuration file
+    //Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         print(&log);
     }
     
-    //Print output to log file if specified by configuration file
+    //Print output to log file if specified by the configuration file
     if(strcmp(simulator.logType, "Log to File") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
+        //Open the output log file
         output = fopen("Log", "w");
 
+        //Check to see that the linked list is not empty
     	if(!empty(&log))
     	{
+    	    //Print the first node
     		tempNode = log.head;
-    
     		fprintf(output, "%s\n", tempNode->dataItem);
     
+            //Iterate through the linked list
     		while(tempNode->next != 0)
     		{
+    		    //Go to the next node
     			tempNode = tempNode->next;
     
+                //Print the next node
     			fprintf(output, "%s\n", tempNode->dataItem);
     		}
     	}
+    	
+    	//Close the output file
         fclose(output);
     }
     
+    //End the program
     return 0;
 }
 
-//Function Implementations
+////////////// Function Implementations ////////////////////////
+
 bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char *configurationFilePath) {
 
     // Initialize variables
