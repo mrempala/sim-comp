@@ -30,7 +30,6 @@ typedef struct simulatorStructure
 
 typedef struct taskInfoBlock
 {
-    //Operation Type/Name
     char operation;
     int totalCycles;
     int cyclesRemaining;
@@ -42,12 +41,9 @@ typedef struct processControlBlock
     int pid;
     time_t arrivalTime;
     time_t timeRemaining;
-    //new var needs to hold thread info, if != something the thread is not completed
     int priority;
-    //waiting for I/O
-    int waitFlag;
-    
-    //List of Actions
+    bool ioInterrupted;
+    bool ioFinished;
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -57,12 +53,9 @@ typedef struct processControlBlock
 
 typedef struct threadInfo
 {
-    int processPID;
     struct processControlBlock* process;
-    char *processJob;
-    char processType;
-    int processCycles;
     int quantumTime;
+    // needs log something
 }threadInfo;
 
 
@@ -160,10 +153,16 @@ int main(int argc, char *argv[])
     while(currentProcess != NULL)
     {   
         currentProcess->arrivalTime = time(NULL);
+
+        if(interrupted == 1)
+        {
+            currentProcess->jobs[currentProcess->currentJob].cyclesRemaining = 0;
+            currentProcess->ioFinished = true;
+        }
         
         //Process current task by busy waiting
         // if not blocked for I/O wait, continue to process next job
-        if(!currentProcess->waitFlag )
+        if( currentProcess->ioFinished )
         {
             // if a process has a CPU operation
             if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
@@ -195,6 +194,7 @@ int main(int argc, char *argv[])
             // if a process has an I/O operation
             else
             {
+                currentProcess->ioFinished = false;
                 threadCreate(currentProcess, simulator);
             }
         }
@@ -636,11 +636,11 @@ void* threadWait(void* threadInfo)
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*) threadInfo;
     
+    printf("thread created");
     //calculate waitTime
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
 
-    
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
@@ -649,10 +649,13 @@ void* threadWait(void* threadInfo)
     interrupted = 1;   
 
     //alert process to its completion 
-    //info->process->
+    info->process->ioFinished = true;
+    info->process->ioInterrupted = true;
     
     //send data to log
+    //do the log thing
 
+    printf("thread finished");
     //Returns
     pthread_exit(0);
 }
@@ -683,7 +686,6 @@ void threadCreate(struct processControlBlock *process,  struct simulatorStructur
 
     pthread_create(&thread, NULL, threadWait, (void*)info);
 }
-
 
 
 
