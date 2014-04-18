@@ -53,7 +53,7 @@ typedef struct processControlBlock
 
 typedef struct threadInfo
 {
-    struct processControlBlock** process;
+    struct processControlBlock* process;
     int quantumTime;
     // needs log something
 }threadInfo;
@@ -181,6 +181,8 @@ int main(int argc, char *argv[])
                 {
                     printf("Time Processing %d\n", maxTimeProcessing);
                     usleep(maxTimeProcessing);
+                    
+                    // Subtract quantum time from process
                     currentProcess->timeRemaining -= simulator.quantum;
                     currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
                 }
@@ -189,6 +191,8 @@ int main(int argc, char *argv[])
                 {
                      printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     
+                     // Subtract time run from process
                      currentProcess->timeRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                      currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                 }
@@ -202,10 +206,13 @@ int main(int argc, char *argv[])
                 
                 puts("IO Process");
                 currentProcess->ioFinished = false;
+                printf("Time remaining %d\n", currentProcess->timeRemaining);
                 threadCreate(&currentProcess, simulator);
-                if(currentProcess->ioInterrupted)
-    			puts("IO is interrupted");
+                usleep(5000000);
+                printf("Time remaining %d\n", currentProcess->timeRemaining);
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                if(currentProcess->ioInterrupted)
+                	puts("done");
             }
         }
         
@@ -651,31 +658,31 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 void* threadWait(void* threadInfo)
 {
     //Initalize variables
-    struct threadInfo *info = (struct threadInfo*) threadInfo;
+    struct threadInfo *info = (struct threadInfo*)threadInfo;
     
-    struct processControlBlock **process = info->process;
     printf("thread created\n");
     //calculate waitTime
-    int waitTime = ((*process)->jobs[(*process)->currentJob].cyclesRemaining * info->quantumTime * 1000);
-    usleep(waitTime);
+    //int waitTime = ((*info->process)->jobs[(*info->process)->currentJob].cyclesRemaining * info->quantumTime * 1000);
+    //usleep(waitTime);
 
     //If there is another interrupt,
     //wait for it to be serviced
+    
     while (interrupted == 1);
     
     //Set interrupt for itself
     interrupted = 1;   
 
     //alert process to its completion
-    (*process)->ioInterrupted = true; 
-    (*process)->ioFinished = true;
+    info->process->ioInterrupted = true; 
+    info->process->ioFinished = true;
     
     //send data to log
     //do the log thing
     
     // Clear cycles remaining for current job
-    (*process)->timeRemaining -= (*process)->jobs[(*process)->currentJob].cyclesRemaining;
-    (*process)->jobs[(*process)->currentJob].cyclesRemaining = 0;
+    info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
+    info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
     
     printf("thread finished\n");
     //Returns
@@ -684,12 +691,11 @@ void* threadWait(void* threadInfo)
 
 void threadCreate(struct processControlBlock **process,  struct simulatorStructure simulator)
 {
-	puts("Creating thread");
     pthread_t thread;
     struct threadInfo *info;
     
     // put correct information into threadInfo struct
-    info->process = process;
+    info->process = *process;
     if( strcmp("monitor", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.monitorDisplayTime;
@@ -706,7 +712,7 @@ void threadCreate(struct processControlBlock **process,  struct simulatorStructu
     {
         info->quantumTime = simulator.printerCycleTime;
     }
-    pthread_create(&thread, NULL, threadWait, (void*)&info);
+    pthread_create(&thread, NULL, threadWait, (void*)info);
 }
 
 
