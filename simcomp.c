@@ -443,6 +443,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     // Initialize variables
     FILE *input;
     fpos_t cursor;
+    int tempValue = 0;
     unsigned int numberOfJobs, length;
     processControlBlock *tempProcess = NULL , *previousProcess = NULL;
     
@@ -497,9 +498,12 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             // Allocate memory for jobs in the process
             tempProcess->jobs = (taskInfoBlock*)malloc(sizeof(taskInfoBlock) * (numberOfJobs));
             
-            // Set job details of process
+            // Set details of process
             tempProcess->numberOfJobs = numberOfJobs;
             tempProcess->currentJob = 0;
+            tempProcess->pid = tempValue++;
+            tempProcess->ioFinished = true;
+            tempProcess->ioInterrupted = false;
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++) {
