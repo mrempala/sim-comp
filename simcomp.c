@@ -231,9 +231,8 @@ int main(int argc, char *argv[])
             
         //Get the next process
         else 
-            setCurrentProcess(&currentProcess, simulator);           
+            setCurrentProcess(&currentProcess, simulator);         
     }
-    
     /*//Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
@@ -268,8 +267,15 @@ int main(int argc, char *argv[])
         fclose(output);
     }*/
     
+    // Free memory
+    free(simulator.version);
+    free(simulator.processorScheduling);
+    free(simulator.processFilePath);
+    free(simulator.memoryType);
+    free(simulator.logType);
+    
     //End the program
-    return 0;
+    exit(0);
 }
 
 /////////////////////// Function Implementations //////////////////////////////////
@@ -644,7 +650,10 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
     //Check to see if node is the last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
+    	for(unsigned int i = 0; i < currentProcess->numberOfJobs; i++)
+    		free(currentProcess->jobs[i].name);
         //If so, delete it
+        free(currentProcess->jobs);
         free( currentProcess );
         currentProcess = NULL;
         return NULL;
@@ -656,6 +665,9 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
         currentProcess->previousPCB->nextPCB = currentProcess->nextPCB;
         currentProcess->nextPCB->previousPCB = currentProcess->previousPCB;
         temp = currentProcess->nextPCB;
+        for(unsigned int i = 0; i < currentProcess->numberOfJobs; i++)
+    		free(currentProcess->jobs[i].name);
+    	free(currentProcess->jobs);
         free( currentProcess );
     }
     
@@ -687,14 +699,13 @@ void* threadWait(void* threadInfo)
     
     //Set interrupt for itself
     interrupted = 1;   
-
-    //alert process to its completion
-    info->process->ioInterrupted = true;
     
     //send data to log
     //do the log thing
     
     printf("thread finished\n");
+    //alert process to its completion
+    info->process->ioInterrupted = true;
     //Returns
     pthread_exit(0);
 }
