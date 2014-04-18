@@ -41,7 +41,6 @@ typedef struct processControlBlock
     int pid;
     time_t arrivalTime;
     time_t timeRemaining;
-    int priority;
     bool ioInterrupted;
     bool ioFinished;
     bool threadBeingCreated;
@@ -54,7 +53,7 @@ typedef struct processControlBlock
 
 typedef struct threadInfo
 {
-    struct processControlBlock* process;
+    processControlBlock* process;
     unsigned int quantumTime;
     // needs log something
 }threadInfo;
@@ -291,7 +290,7 @@ int main(int argc, char *argv[])
     free(simulator.logType);
     
     //End the program
-    exit(0);
+    return 0;
 }
 
 /////////////////////// Function Implementations //////////////////////////////////
@@ -722,6 +721,7 @@ void* threadWait(void* threadInfo)
     printf("thread finished\n");
     //alert process to its completion
     info->process->ioInterrupted = true;
+    free(threadInfo);
     //Returns
     pthread_exit(0);
 }
@@ -729,10 +729,11 @@ void* threadWait(void* threadInfo)
 void threadCreate(struct processControlBlock **process,  struct simulatorStructure simulator)
 {
     pthread_t thread;
-    struct threadInfo *info;
+    threadInfo *info = (threadInfo*)malloc(sizeof(threadInfo));
     
     // put correct information into threadInfo struct
     info->process = *process;
+    
     if( strcmp("monitor", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.monitorDisplayTime;
