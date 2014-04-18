@@ -1,7 +1,6 @@
 /*
 	list.h
 	Date Modified: 	April 2, 2014
-	Author:		Vance
 	Description:	A simple list struct for C.
 */
 
