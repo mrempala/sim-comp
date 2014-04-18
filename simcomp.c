@@ -55,7 +55,7 @@ typedef struct processControlBlock
 typedef struct threadInfo
 {
     struct processControlBlock* process;
-    int quantumTime;
+    unsigned int quantumTime;
     // needs log something
 }threadInfo;
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
         
         //Process current task by busy waiting
         // if not blocked for I/O wait, continue to process next job
-        if( currentProcess->ioFinished )
+        if( currentProcess->ioFinished && currentProcess->currentJob < currentProcess->numberOfJobs)
         {
             // if a process has a CPU operation
             if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
@@ -221,24 +221,20 @@ int main(int argc, char *argv[])
         //If the currentProcess's job is finished, delete it
         if( currentProcess->jobs[currentProcess->currentJob].cyclesRemaining <= 0 )
         {
-            if(currentProcess->currentJob < currentProcess->numberOfJobs) {
-                puts("Job swtich");
+            if(currentProcess->currentJob < currentProcess->numberOfJobs)
                 currentProcess->currentJob++;
-            }
         }
         
         //Delete the process if it is done
-        if( currentProcess->timeRemaining <= 0 && currentProcess->ioInterrupted == false)
+        if( currentProcess->timeRemaining <= 0 && currentProcess->ioInterrupted == false && currentProcess->ioFinished == true)
             currentProcess = deleteProcess( currentProcess );   
             
         //Get the next process
         else 
-            setCurrentProcess(&currentProcess, simulator);
-                        
+            setCurrentProcess(&currentProcess, simulator);           
     }
     
-    
-    //Print output to monitor if specified by the configuration file
+    /*//Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         print(&log);
@@ -270,7 +266,7 @@ int main(int argc, char *argv[])
     	
     	//Close the output file
         fclose(output);
-    }
+    }*/
     
     //End the program
     return 0;
@@ -670,11 +666,7 @@ void* threadWait(void* threadInfo)
 {
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*)threadInfo;
-    
-    printf("thread created\n");
-    //calculate waitTime
-    int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
-    usleep(waitTime);
+    unsigned int temp = info->process->jobs[info->process->currentJob].cyclesRemaining;
     
     // Clear cycles remaining for current job
     info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
@@ -682,7 +674,12 @@ void* threadWait(void* threadInfo)
     
     // Clear thread beign created
     info->process->threadBeingCreated = false;
-
+    
+    printf("thread created\n");
+    
+    //calculate waitTime
+    int waitTime = (temp * info->quantumTime * 1000);
+    usleep(waitTime);
     //If there is another interrupt,
     //wait for it to be serviced
     
@@ -692,8 +689,7 @@ void* threadWait(void* threadInfo)
     interrupted = 1;   
 
     //alert process to its completion
-    info->process->ioInterrupted = true; 
-    info->process->ioFinished = true;
+    info->process->ioInterrupted = true;
     
     //send data to log
     //do the log thing
