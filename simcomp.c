@@ -64,43 +64,37 @@ typedef struct threadInfo
     int processCycles;
     int quantumTime;
 }threadInfo;
+
+
 ///////////////////// Function Declarations //////////////////////////////////
 
-/*
-Name: getSimulatorConfiguration
-Purpose: Reads in simulator configurations from provided file
-*/
+
+//Purpose: Reads in simulator configurations from provided file
 bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char *configurationFilePath);
 
-/*
-Name: getNextCharacter
-Purpose: Returns the next character found in a file
-*/
+
+//Purpose: Returns the next character found in a file
 char getNextCharacter(FILE *input);
 
-/*
-Name: createProcessQueue
-Purpose: Creates process queue from process file
-*/
+
+//Purpose: Creates process queue from process file
 bool createProcessQueue(struct processControlBlock **process, const char *processFilePath);
 
-/*
-Name: setCurrentProcess
-Purpose: Sets the current process based on shceduling type
-*/
+
+//Purpose: Sets the current process based on shceduling type
 void setCurrentProcess(struct processControlBlock **currentProcess, struct simulatorStructure simulator);
 
-/*
-Name: deleteProcess
-Purpose: Deletes the process given and re-links the circularly linked list
-*/
+
+//Purpose: Deletes the process given and re-links the circularly linked list
 processControlBlock * deleteProcess(struct processControlBlock *currentProcess);
 
-/*
-Name: threadWait
-Purpose: Function to pass to I/O thread to make it wait the required time
-*/
+
+//Purpose: Function to pass to I/O thread to make it wait the required time
 void* threadWait(void*);
+
+
+//Purpose: Function to pass to I/O thread to make it wait the required time
+void threadCreate(struct processControlBlock *currentProcess,  struct simulatorStructure simulator);
 
 ////////////////////////////////// Main //////////////////////////////////////////
 
@@ -158,15 +152,6 @@ int main(int argc, char *argv[])
     currentProcess = &process[0];
     currentProcess->arrivalTime = time(NULL);
     
-    /* Display all jobs
-    while(process != NULL) {
-        puts("Process:");
-            for(unsigned int i = 0; i < process->numberOfJobs; i++) {
-            printf("Job %d\n%c - %s - %d - %d\n", i, process->jobs[i].operation, process->jobs[i].name, process->jobs[i].totalCycles, process->jobs[i].cyclesRemaining);
-        }
-        process = process->nextPCB;
-    }*/
-    
     //assign maxTimeAllowed to processes in microseconds  
     //maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     insert(&log, "Testing Log File\n");
@@ -177,43 +162,40 @@ int main(int argc, char *argv[])
         currentProcess->arrivalTime = time(NULL);
         
         //Process current task by busy waiting
-        if(!currentProcess->waitFlag ) //is not blocked for I/O wait, else, skip wait
+        // if not blocked for I/O wait, continue to process next job
+        if(!currentProcess->waitFlag )
         {
-            switch(currentProcess->jobs[currentProcess->currentJob].operation) 
+            // if a process has a CPU operation
+            if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
             {
-                case 'P':
-                    // Sleep
-                    printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                    printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+                // Sleep
+                printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
 
-                    //if the quantum time is less than the remaining job time, take the entire quantum
-                    if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
-                    {
-                        printf("Time Processing %d\n", maxTimeProcessing);
-                        usleep(maxTimeProcessing);
-                    }
-                    //if the quantum is greater than required time, finish the job
-                    else
-                    {
-                         printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
-                         usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
-                     }
-                         
-                         
-                    currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
-                    currentProcess->timeRemaining -= simulator.quantum;
-                    printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                    printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
-                break;
-                
-                case 'I':
-                    // Create thread
-                    
-                break;
-                
-                case 'O':
-                    // Create a thread
-                break;
+                //if the quantum time is less than the remaining job time, take the entire quantum
+                if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
+                {
+                    printf("Time Processing %d\n", maxTimeProcessing);
+                    usleep(maxTimeProcessing);
+                }
+                //if the quantum is greater than required time, finish the job
+                else
+                {
+                     printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                }
+                     
+                     
+                currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
+                currentProcess->timeRemaining -= simulator.quantum;
+                printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
+                printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+            }
+
+            // if a process has an I/O operation
+            else
+            {
+                threadCreate(currentProcess, simulator);
             }
         }
         
@@ -658,19 +640,53 @@ void* threadWait(void* threadInfo)
     int waitTime = (info->processCycles * info->quantumTime * 1000);
     usleep(waitTime);
 
-    // Log process completion
-    
     
     //If there is another interrupt,
     //wait for it to be serviced
     while (interrupted == 1);
     
     //Set interrupt for itself
-    interrupted = 1;    
+    interrupted = 1;   
 
-    //alert process to its completion
+    //alert process to its completion 
+    //info->process->
     
+    //send data to log
 
     //Returns
     pthread_exit(0);
 }
+
+void threadCreate(struct processControlBlock *process,  struct simulatorStructure simulator)
+{
+    pthread_t thread;
+    struct threadInfo *info;
+    
+    // put correct information into threadInfo struct
+    info->process = process;
+    if( strcmp("monitor", process->jobs[process->currentJob].name) == 0)
+    {
+        info->quantumTime = simulator.monitorDisplayTime;
+    }
+    else if( strcmp("hard drive", process->jobs[process->currentJob].name) == 0)
+    {
+        info->quantumTime = simulator.hardDriveCycleTime;
+    }
+    else if( strcmp("keyboard", process->jobs[process->currentJob].name) == 0)
+    {
+        info->quantumTime = simulator.keyboardCycleTime;
+    }
+    else
+    {
+        info->quantumTime = simulator.printerCycleTime;
+    }
+
+    pthread_create(&thread, NULL, threadWait, (void*)info);
+}
+
+
+
+
+
+
+
