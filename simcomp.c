@@ -44,6 +44,7 @@ typedef struct processControlBlock
     int priority;
     bool ioInterrupted;
     bool ioFinished;
+    bool threadBeingCreated;
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -207,8 +208,9 @@ int main(int argc, char *argv[])
                 puts("IO Process");
                 currentProcess->ioFinished = false;
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
+                currentProcess->threadBeingCreated = true;
                 threadCreate(&currentProcess, simulator);
-                while(currentProcess->ioFinished == false);
+                while(currentProcess->threadBeingCreated);
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
                 if(currentProcess->ioInterrupted)
@@ -226,7 +228,7 @@ int main(int argc, char *argv[])
         }
         
         //Delete the process if it is done
-        if( currentProcess->timeRemaining <= 0 )
+        if( currentProcess->timeRemaining <= 0 && currentProcess->ioInterrupted == false)
             currentProcess = deleteProcess( currentProcess );   
             
         //Get the next process
@@ -527,6 +529,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             tempProcess->ioFinished = true;
             tempProcess->ioInterrupted = false;
             tempProcess->arrivalTime = 0;
+            tempProcess->threadBeingCreated = false;
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++) {
@@ -672,6 +675,13 @@ void* threadWait(void* threadInfo)
     //calculate waitTime
     int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
     usleep(waitTime);
+    
+    // Clear cycles remaining for current job
+    info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
+    info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
+    
+    // Clear thread beign created
+    info->process->threadBeingCreated = false;
 
     //If there is another interrupt,
     //wait for it to be serviced
@@ -687,10 +697,6 @@ void* threadWait(void* threadInfo)
     
     //send data to log
     //do the log thing
-    
-    // Clear cycles remaining for current job
-    info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
-    info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
     
     printf("thread finished\n");
     //Returns
