@@ -44,6 +44,7 @@ typedef struct processControlBlock
     int priority;
     bool ioInterrupted;
     bool ioFinished;
+    bool threadBeingCreated;
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -207,8 +208,9 @@ int main(int argc, char *argv[])
                 puts("IO Process");
                 currentProcess->ioFinished = false;
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
+                currentProcess->threadBeingCreated = true;
                 threadCreate(&currentProcess, simulator);
-                usleep(5000000);
+                while(currentProcess->threadBeingCreated);
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
                 if(currentProcess->ioInterrupted)
@@ -524,6 +526,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             tempProcess->ioFinished = true;
             tempProcess->ioInterrupted = false;
             tempProcess->arrivalTime = 0;
+            tempProcess->threadBeingCreated = false;
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++) {
@@ -676,6 +679,7 @@ void* threadWait(void* threadInfo)
     //alert process to its completion
     info->process->ioInterrupted = true; 
     info->process->ioFinished = true;
+    info->process->threadBeingCreated = false;
     
     //send data to log
     //do the log thing
@@ -714,9 +718,3 @@ void threadCreate(struct processControlBlock **process,  struct simulatorStructu
     }
     pthread_create(&thread, NULL, threadWait, (void*)info);
 }
-
-
-
-
-
-
