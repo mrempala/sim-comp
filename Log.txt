@@ -1,0 +1,74 @@
+System Start 0 (microsec)
+
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 10000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 0: CPU Process 10000 (microsec)
+PID 1: Began keyboard I/O Process
+PID 2: CPU Process 10000 (microsec)
+PID 1: I/O thread created
+PID 0: Began keyboard I/O Process
+PID 2: Began hard drive I/O Process
+PID 0: I/O thread created
+PID 2: I/O thread created
+PID 2: I/O thread finished 250000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 20000 (microsec)
+PID 2: Began hard drive I/O Process
+PID 2: I/O thread created
+PID 2: I/O thread finished 250000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 10000 (microsec)
+PID 2: Began hard drive I/O Process
+PID 2: I/O thread created
+PID 2: I/O thread finished 0 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 30000 (microsec)
+PID 2: CPU Process 10000 (microsec)
+PID 2: finished
+PID 1: I/O thread finished 5000000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 0: I/O thread finished 5000000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 1: CPU Process 10000 (microsec)
+PID 0: Began monitor I/O Process
+PID 1: Began hard drive I/O Process
+PID 0: I/O thread created
+PID 1: I/O thread created
+PID 0: I/O thread finished 125000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 0: CPU Process 20000 (microsec)
+PID 0: Began hard drive I/O Process
+PID 0: I/O thread created
+PID 1: I/O thread finished 250000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 1: CPU Process 30000 (microsec)
+PID 1: finished
+PID 0: I/O thread finished 250000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 0: CPU Process 30000 (microsec)
+PID 0: CPU Process 10000 (microsec)
+PID 0: finished
+
+System End 0 (microsec)
