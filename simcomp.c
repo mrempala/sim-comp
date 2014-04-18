@@ -129,8 +129,9 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-    printf("Q: %d P: %d\n", simulator.quantum, simulator.processorCycleTime);
+    //assign maximum allowed processing time from the simulator configuration
     maxTimeProcessing = (simulator.quantum * simulator.processorCycleTime * 1000);
+
     // Create process queue
     // Check if creating process queue failed
     if(!createProcessQueue(&process, simulator.processFilePath)) 
@@ -155,6 +156,7 @@ int main(int argc, char *argv[])
         
             currentProcess->arrivalTime = time(NULL);
 
+        //if a thread throws and interrupt
         if(interrupted == 1)
         {
             tempPCB = currentProcess;
@@ -208,16 +210,27 @@ int main(int argc, char *argv[])
             else
             {
                 
-                puts("IO Process");
+                // output to log
+                sprintf(logBuffer, "PID %d: Began %s I/O Process", currentProcess->pid, currentProcess->jobs[currentProcess->currentJob].name);
+                insert(&log, logBuffer);
+                puts("\n");
+
+                // set ioFinished to false so this process will be skipped in the queue
                 currentProcess->ioFinished = false;
+
+                // write moar to the log
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
                 currentProcess->threadBeingCreated = true;
                 threadCreate(&currentProcess, simulator);
+
+                // wait for thread to finish creating itself
+                // weird errors happen to process if not made to wait for a second
                 while(currentProcess->threadBeingCreated);
+
+                //write more time remaining to log
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                if(currentProcess->ioInterrupted)
-                	puts("done");
+
             }
         }
         
