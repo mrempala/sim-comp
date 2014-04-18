@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
     // Set current process
     currentProcess = &process[0];
     
+	// begin writing to log
     insert(&log, "System Start 0 (microsec)\n");
     
     //Begin Simulation Loop and go until no processes remain
@@ -153,8 +154,9 @@ int main(int argc, char *argv[])
     {
         // Set process's arrival time if not already set
         if(currentProcess->arrivalTime == 0)
-        
+        {
             currentProcess->arrivalTime = time(NULL);
+		}
 
         //if a thread throws an interrupt
         if(interrupted == 1)
@@ -174,6 +176,7 @@ int main(int argc, char *argv[])
 			//reset interrupt flag
             interrupted = 0;
         }
+
         
         //Process current task by busy waiting
         // if not blocked for I/O wait, continue to process next job
@@ -255,7 +258,10 @@ int main(int argc, char *argv[])
             currentProcess = deleteProcess( currentProcess );  
 		} 
             
-        //Get the next process
+        //Get the next process, context switch
+        /*  context switches do not get printed because they happen so many times in larger processes that it takes
+        	up the entire log file
+        */
         else
 		{
             setCurrentProcess(&currentProcess, simulator);
@@ -263,7 +269,7 @@ int main(int argc, char *argv[])
     }
 
 	//last log output
-	insert(&log, "System End");
+	insert(&log, "\nSystem End 0 (microsec)");
 
     //Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
