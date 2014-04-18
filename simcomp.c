@@ -586,9 +586,14 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     
     // Set previous PCB
     for(unsigned int i = 0; i < numberOfProcesses; i++) {
-        tempProcess = process;
-        *process = (*process)->nextPCB;
-        (*process)->previousPCB = tempProcess;
+        tempProcess = previousProcess;
+        previousProcess = previousProcess->nextPCB;
+        previousProcess->previousPCB = tempProcess;
+    }
+    
+    for(unsigned int i = 0; i < numberOfProcesses; i++) {
+    	printf("PID %d offset %p %p %p\n", (*process)->pid, (*process), (*process)->nextPCB, (*process)->previousPCB);
+    	(*process) = (*process)->nextPCB;
     }
     
     // Close file
