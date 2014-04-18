@@ -168,24 +168,24 @@ int main(int argc, char *argv[])
         if(currentProcess->arrivalTime == 0)
         {
             currentProcess->arrivalTime = time(NULL);
-	}
+        }
 
         // if a thread throws an interrupt
         if(interrupted == 1)
         {
             tempPCB = currentProcess;
 
-	    //search for the process whose I/O just finished
+            //search for the process whose I/O just finished
             while(tempPCB->ioInterrupted == false)
             {
                 tempPCB = tempPCB->nextPCB;
             }
 
-	    //reset Finished and Interrupted so that the process can continue being processed
+            //reset Finished and Interrupted so that the process can continue being processed
             tempPCB->ioFinished = true;
             tempPCB->ioInterrupted = false;
 
-	    //reset interrupt flag
+            //reset interrupt flag
             interrupted = 0;
         }
 
@@ -200,11 +200,11 @@ int main(int argc, char *argv[])
                 //if the quantum time is less than the remaining job time, take the entire quantum
                 if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
                 {
-		    //write to log
+                    //write to log
                     sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, maxTimeProcessing);
                     insert(&log, logBuffer);
-					
-		    //sleep for maximum time
+
+                    //sleep for maximum time
                     usleep(maxTimeProcessing);
                     
                     // Subtract quantum time from process
@@ -214,11 +214,11 @@ int main(int argc, char *argv[])
                 //if the quantum is greater than required time, finish the job
                 else
                 {
-		     // write to log
+                     // write to log
                      sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      insert(&log, logBuffer);
 
-		     // sleep for remaining job time
+                     // sleep for remaining job time
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      
                      // Subtract time run from process
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 
                 currentProcess->threadBeingCreated = true;
 
-		// create thread
+                // create thread
                 threadCreate(&currentProcess, simulator, &log);
 
                 // wait for thread to finish creating itself
@@ -257,25 +257,25 @@ int main(int argc, char *argv[])
         if( currentProcess->jobs[currentProcess->currentJob].cyclesRemaining <= 0 )
         {
             if(currentProcess->currentJob < currentProcess->numberOfJobs)
-	    {
+            {
                 currentProcess->currentJob++;
-	    }
+            }
         }
         
         //Delete the process if it is done
         if( currentProcess->timeRemaining <= 0 && currentProcess->ioInterrupted == false && currentProcess->ioFinished == true)
-	{
-	    sprintf(logBuffer, "PID %d: finished", currentProcess->pid);
-	    insert(&log, logBuffer);
+        {
+            sprintf(logBuffer, "PID %d: finished", currentProcess->pid);
+            insert(&log, logBuffer);
             currentProcess = deleteProcess( currentProcess );  
-	} 
+        } 
             
         //Get the next process, context switch
         //context switches do not get printed because they happen so many times in larger processes that it takes up the entire log file
         else
-	{
+        {
             setCurrentProcess(&currentProcess, simulator);
-	}         
+        }         
     }
 
     //last log output
@@ -294,24 +294,24 @@ int main(int argc, char *argv[])
         output = fopen("Log.txt", "w");
 
         //Check to see that the linked list is not empty
-    	if(!empty(&log))
-    	{
-    	    //Print the first node
-    	    tempNode = log.head;
-    	    fprintf(output, "%s\n", tempNode->dataItem);
+        if(!empty(&log))
+        {
+            //Print the first node
+            tempNode = log.head;
+            fprintf(output, "%s\n", tempNode->dataItem);
     
             //Iterate through the linked list
-    	    while(tempNode->next != 0)
-    	    {
-     	        //Go to the next node
-    		tempNode = tempNode->next;
+            while(tempNode->next != 0)
+            {
+                //Go to the next node
+                tempNode = tempNode->next;
     
                 //Print the next node
-    		fprintf(output, "%s\n", tempNode->dataItem);
-    	    }
-    	}
-    	
-    	//Close the output file
+                fprintf(output, "%s\n", tempNode->dataItem);
+            }
+        }
+        
+        //Close the output file
         fclose(output);
     }
 
@@ -352,7 +352,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
         
         // Check if the next character isn't a newline
         if(getNextCharacter(input) != '\n')
-	{
+        {
         
             // Go back to last position in file
             fsetpos(input, &cursor);
@@ -381,7 +381,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
             // Check if line is version
             if(strcmp(line, "Version") == 0)
-	    {
+            {
                 // Allocate memory for version including a space for a null terminator
                 simulator->version = (char*)malloc(sizeof(char) * (length + 1));
             
@@ -400,7 +400,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
             // Otherwise check if line is processor scheduling
             else if(strcmp(line, "Processor Scheduling") == 0)
-	    {
+            {
         
                 // Allocate memory for processor scheduling including a space for a null terminator
                 simulator->processorScheduling = (char*)malloc(sizeof(char) * (length + 1));
@@ -418,7 +418,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
             // Otherwise check if line is process file path
             else if(strcmp(line, "File Path") == 0)
-	    {
+            {
         
                 // Allocate memory for process file path including a space for a null terminator
                 simulator->processFilePath = (char*)malloc(sizeof(char) * (length + 1));
@@ -462,7 +462,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
             // Otherwise check if line is memory type
             else if(strcmp(line, "Memory type") == 0)
-	    {
+            {
                 // Allocate memory for memory type including a space for a null terminator
                 simulator->memoryType = (char*)malloc(sizeof(char) * (length + 1));
             
@@ -475,7 +475,7 @@ bool getSimulatorConfiguration(struct simulatorStructure *simulator, const char 
             
             // Otherwise check if line is log
             else if(strcmp(line, "Log") == 0)
-	    {
+            {
                 // Allocate memory for log type including a space for a null terminator
                 simulator->logType = (char*)malloc(sizeof(char) * (length + 1));
             
@@ -540,7 +540,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
         
         // Otherwise check if next character in file is A
         else if(getNextCharacter(input) == 'A')
-	{
+        {
         
             // Allocate memory for new process
             tempProcess = (processControlBlock*)malloc(sizeof(processControlBlock));
@@ -568,7 +568,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             
             // Skip until end of A process
             for(numberOfJobs = 0; getNextCharacter(input) != 'A'; numberOfJobs++)
-	    {
+            {
             
                 while(fgetc(input) != ';');
                 
@@ -592,7 +592,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++)
-	    {
+            {
             
                 // Get job operation
                 tempProcess->jobs[i].operation = fgetc(input);
@@ -705,8 +705,8 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
     //Check to see if node is the last node remaining
     if( currentProcess->nextPCB == currentProcess)
     {
-    	for(unsigned int i = 0; i < currentProcess->numberOfJobs; i++)
-    		free(currentProcess->jobs[i].name);
+        for(unsigned int i = 0; i < currentProcess->numberOfJobs; i++)
+            free(currentProcess->jobs[i].name);
 
         //If so, delete it
         free(currentProcess->jobs);
@@ -722,8 +722,8 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
         currentProcess->nextPCB->previousPCB = currentProcess->previousPCB;
         temp = currentProcess->nextPCB;
         for(unsigned int i = 0; i < currentProcess->numberOfJobs; i++)
-    		free(currentProcess->jobs[i].name);
-    	free(currentProcess->jobs);
+            free(currentProcess->jobs[i].name);
+        free(currentProcess->jobs);
         free( currentProcess );
     }
     
