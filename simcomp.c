@@ -53,7 +53,7 @@ typedef struct processControlBlock
 
 typedef struct threadInfo
 {
-    struct processControlBlock* process;
+    struct processControlBlock** process;
     int quantumTime;
     // needs log something
 }threadInfo;
@@ -87,7 +87,7 @@ void* threadWait(void*);
 
 
 //Purpose: Function to pass to I/O thread to make it wait the required time
-void threadCreate(struct processControlBlock *currentProcess,  struct simulatorStructure simulator);
+void threadCreate(struct processControlBlock **currentProcess,  struct simulatorStructure simulator);
 
 ////////////////////////////////// Main //////////////////////////////////////////
 
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 
         if(interrupted == 1)
         {
-            tempPCB = &process[0];
+            tempPCB = currentProcess;
             while(tempPCB->ioInterrupted == false)
             {
                 tempPCB = tempPCB->nextPCB;
@@ -174,24 +174,24 @@ int main(int argc, char *argv[])
             {
                 // Sleep
                 printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+                printf("PID %d Proc Time Rem %d\n", currentProcess->pid, currentProcess->timeRemaining);
 
                 //if the quantum time is less than the remaining job time, take the entire quantum
                 if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
                 {
                     printf("Time Processing %d\n", maxTimeProcessing);
                     usleep(maxTimeProcessing);
+                    currentProcess->timeRemaining -= simulator.quantum;
+                    currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
                 }
                 //if the quantum is greater than required time, finish the job
                 else
                 {
                      printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     currentProcess->timeRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
+                     currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                 }
-                     
-                     
-                currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
-                currentProcess->timeRemaining -= simulator.quantum;
                 printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
                 printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
             }
@@ -202,15 +202,20 @@ int main(int argc, char *argv[])
                 
                 puts("IO Process");
                 currentProcess->ioFinished = false;
-                threadCreate(currentProcess, simulator);
+                threadCreate(&currentProcess, simulator);
+                if(currentProcess->ioInterrupted)
+    			puts("IO is interrupted");
+                printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
             }
         }
         
         //If the currentProcess's job is finished, delete it
         if( currentProcess->jobs[currentProcess->currentJob].cyclesRemaining <= 0 )
         {
-            if(currentProcess->currentJob < currentProcess->numberOfJobs)
+            if(currentProcess->currentJob < currentProcess->numberOfJobs) {
+                puts("Job swtich");
                 currentProcess->currentJob++;
+            }
         }
         
         //Delete the process if it is done
@@ -648,9 +653,10 @@ void* threadWait(void* threadInfo)
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*) threadInfo;
     
+    struct processControlBlock **process = info->process;
     printf("thread created\n");
     //calculate waitTime
-    int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
+    int waitTime = ((*process)->jobs[(*process)->currentJob].cyclesRemaining * info->quantumTime * 1000);
     usleep(waitTime);
 
     //If there is another interrupt,
@@ -661,22 +667,22 @@ void* threadWait(void* threadInfo)
     interrupted = 1;   
 
     //alert process to its completion
-    info->process->ioInterrupted = true; 
-    info->process->ioFinished = true;
+    (*process)->ioInterrupted = true; 
+    (*process)->ioFinished = true;
     
     //send data to log
     //do the log thing
     
     // Clear cycles remaining for current job
-    info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
-    info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
+    (*process)->timeRemaining -= (*process)->jobs[(*process)->currentJob].cyclesRemaining;
+    (*process)->jobs[(*process)->currentJob].cyclesRemaining = 0;
     
     printf("thread finished\n");
     //Returns
     pthread_exit(0);
 }
 
-void threadCreate(struct processControlBlock *process,  struct simulatorStructure simulator)
+void threadCreate(struct processControlBlock **process,  struct simulatorStructure simulator)
 {
 	puts("Creating thread");
     pthread_t thread;
@@ -684,15 +690,15 @@ void threadCreate(struct processControlBlock *process,  struct simulatorStructur
     
     // put correct information into threadInfo struct
     info->process = process;
-    if( strcmp("monitor", process->jobs[process->currentJob].name) == 0)
+    if( strcmp("monitor", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.monitorDisplayTime;
     }
-    else if( strcmp("hard drive", process->jobs[process->currentJob].name) == 0)
+    else if( strcmp("hard drive", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.hardDriveCycleTime;
     }
-    else if( strcmp("keyboard", process->jobs[process->currentJob].name) == 0)
+    else if( strcmp("keyboard", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.keyboardCycleTime;
     }
@@ -700,7 +706,7 @@ void threadCreate(struct processControlBlock *process,  struct simulatorStructur
     {
         info->quantumTime = simulator.printerCycleTime;
     }
-    pthread_create(&thread, NULL, threadWait, (void*)info);
+    pthread_create(&thread, NULL, threadWait, (void*)&info);
 }
 
 
