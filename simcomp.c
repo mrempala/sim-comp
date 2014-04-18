@@ -143,7 +143,6 @@ int main(int argc, char *argv[])
     
     // Set current process
     currentProcess = &process[0];
-    currentProcess->arrivalTime = time(NULL);
     
     //assign maxTimeAllowed to processes in microseconds  
     //maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
@@ -151,8 +150,11 @@ int main(int argc, char *argv[])
     
     //Begin Simulation Loop and go until no processes remain
     while(currentProcess != NULL)
-    {   
-        currentProcess->arrivalTime = time(NULL);
+    {
+        // Set process's arrival time if not already set
+        if(currentProcess->arrivalTime == 0)
+        
+            currentProcess->arrivalTime = time(NULL);
 
         if(interrupted == 1)
         {
@@ -510,6 +512,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             tempProcess->pid = tempValue++;
             tempProcess->ioFinished = true;
             tempProcess->ioInterrupted = false;
+            tempProcess->arrivalTime = 0;
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++) {
