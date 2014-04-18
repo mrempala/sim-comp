@@ -665,8 +665,8 @@ void* threadWait(void* threadInfo)
     
     printf("thread created\n");
     //calculate waitTime
-    //int waitTime = ((*info->process)->jobs[(*info->process)->currentJob].cyclesRemaining * info->quantumTime * 1000);
-    //usleep(waitTime);
+    int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
+    usleep(waitTime);
 
     //If there is another interrupt,
     //wait for it to be serviced
