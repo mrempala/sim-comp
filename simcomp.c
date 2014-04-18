@@ -164,7 +164,8 @@ int main(int argc, char *argv[])
             tempPCB->ioInterrupted = false;
             interrupted = 0;
         }
-        
+
+        printf("PID %d\n", currentProcess->pid);
         //Process current task by busy waiting
         // if not blocked for I/O wait, continue to process next job
         if( currentProcess->ioFinished )
@@ -173,13 +174,12 @@ int main(int argc, char *argv[])
             if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
             {
                 // Sleep
-                printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
                 printf("PID %d Proc Time Rem %d\n", currentProcess->pid, currentProcess->timeRemaining);
 
                 //if the quantum time is less than the remaining job time, take the entire quantum
                 if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
                 {
-                    printf("Time Processing %d\n", maxTimeProcessing);
+                    printf("PID %d Time Processing %d\n", currentProcess->pid,  maxTimeProcessing);
                     usleep(maxTimeProcessing);
                     currentProcess->timeRemaining -= simulator.quantum;
                     currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= simulator.quantum;
@@ -187,24 +187,23 @@ int main(int argc, char *argv[])
                 //if the quantum is greater than required time, finish the job
                 else
                 {
-                     printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     printf("PID %d Time Processing %d\n", currentProcess->pid,  currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      currentProcess->timeRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                      currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                 }
-                printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+                printf("PID %d Proc Time Rem %d\n", currentProcess->pid, currentProcess->timeRemaining);
             }
 
             // if a process has an I/O operation
             else
             {
                 
-                puts("IO Process");
+                printf("IO Process\n");
                 currentProcess->ioFinished = false;
                 threadCreate(&currentProcess, simulator);
                 if(currentProcess->ioInterrupted)
-    			puts("IO is interrupted");
+    			printf("IO is interrupted\n");
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
             }
         }
@@ -651,12 +650,13 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 void* threadWait(void* threadInfo)
 {
     //Initalize variables
-    struct threadInfo *info = (struct threadInfo*) threadInfo;
+    struct threadInfo **info = (struct threadInfo**) threadInfo;
     
-    struct processControlBlock **process = info->process;
+    struct processControlBlock **process = (*info)->process;
     printf("thread created\n");
     //calculate waitTime
-    int waitTime = ((*process)->jobs[(*process)->currentJob].cyclesRemaining * info->quantumTime * 1000);
+    int waitTime = ((*process)->jobs[(*process)->currentJob].cyclesRemaining * (*info)->quantumTime * 1000);
+    printf("Segfault?");
     usleep(waitTime);
 
     //If there is another interrupt,
