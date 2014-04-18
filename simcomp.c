@@ -94,7 +94,6 @@ void threadCreate(struct processControlBlock *currentProcess,  struct simulatorS
 int main(int argc, char *argv[])
 {
     //Initialize variables
-    interrupted = 0;
     simulatorStructure simulator;
     taskInfoBlock test;
     processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
@@ -144,8 +143,6 @@ int main(int argc, char *argv[])
     // Set current process
     currentProcess = &process[0];
     
-    //assign maxTimeAllowed to processes in microseconds  
-    //maxTimeAllowed = (simulator.processorCycleTime * simulator.quantum);
     insert(&log, "Testing Log File\n");
     
     //Begin Simulation Loop and go until no processes remain
@@ -163,9 +160,9 @@ int main(int argc, char *argv[])
             {
                 tempPCB = tempPCB->nextPCB;
             }
-            tempPCB->jobs[currentProcess->currentJob].cyclesRemaining = 0;
             tempPCB->ioFinished = true;
             tempPCB->ioInterrupted = false;
+            interrupted = 0;
         }
         
         //Process current task by busy waiting
@@ -202,6 +199,8 @@ int main(int argc, char *argv[])
             // if a process has an I/O operation
             else
             {
+                
+                puts("IO Process");
                 currentProcess->ioFinished = false;
                 threadCreate(currentProcess, simulator);
             }
@@ -649,7 +648,7 @@ void* threadWait(void* threadInfo)
     //Initalize variables
     struct threadInfo *info = (struct threadInfo*) threadInfo;
     
-    printf("thread created");
+    printf("thread created\n");
     //calculate waitTime
     int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
     usleep(waitTime);
@@ -661,20 +660,25 @@ void* threadWait(void* threadInfo)
     //Set interrupt for itself
     interrupted = 1;   
 
-    //alert process to its completion 
+    //alert process to its completion
+    info->process->ioInterrupted = true; 
     info->process->ioFinished = true;
-    info->process->ioInterrupted = true;
     
     //send data to log
     //do the log thing
-
-    printf("thread finished");
+    
+    // Clear cycles remaining for current job
+    info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
+    info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
+    
+    printf("thread finished\n");
     //Returns
     pthread_exit(0);
 }
 
 void threadCreate(struct processControlBlock *process,  struct simulatorStructure simulator)
 {
+	puts("Creating thread");
     pthread_t thread;
     struct threadInfo *info;
     
@@ -696,7 +700,6 @@ void threadCreate(struct processControlBlock *process,  struct simulatorStructur
     {
         info->quantumTime = simulator.printerCycleTime;
     }
-
     pthread_create(&thread, NULL, threadWait, (void*)info);
 }
 
