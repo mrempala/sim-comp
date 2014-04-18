@@ -55,7 +55,7 @@ typedef struct threadInfo
 {
     processControlBlock* process;
     unsigned int quantumTime;
-    // needs log something
+	List *log;
 }threadInfo;
 
 
@@ -87,24 +87,25 @@ void* threadWait(void*);
 
 
 //Purpose: Function to pass to I/O thread to make it wait the required time
-void threadCreate(struct processControlBlock **currentProcess,  struct simulatorStructure simulator);
+void threadCreate(struct processControlBlock **currentProcess,  struct simulatorStructure simulator, List *log);
 
 ////////////////////////////////// Main //////////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
-    //Initialize variables
+    //Initialize variables to be used later
     simulatorStructure simulator;
     taskInfoBlock test;
     processControlBlock *process = NULL, *currentProcess = NULL, *tempPCB = NULL;
     interrupted = 0;
     int maxTimeProcessing = 0;
     List log;
+    char logBuffer [100];
     FILE *output;
     ListNode *tempNode = NULL;
-    char logBuffer [100];
     
-    // initializes log
+    // initializes log to print info to
+	// log will print to file or terminal -at the end of the program- depending on the config file
     init(&log);
     
     // Check if configuration file isn't provided
@@ -155,16 +156,22 @@ int main(int argc, char *argv[])
         
             currentProcess->arrivalTime = time(NULL);
 
-        //if a thread throws and interrupt
+        //if a thread throws an interrupt
         if(interrupted == 1)
         {
             tempPCB = currentProcess;
+
+			//search for the process whose I/O just finished
             while(tempPCB->ioInterrupted == false)
             {
                 tempPCB = tempPCB->nextPCB;
             }
+
+			//reset Finished and Interrupted so that the process can continue being processed
             tempPCB->ioFinished = true;
             tempPCB->ioInterrupted = false;
+
+			//reset interrupt flag
             interrupted = 0;
         }
         
@@ -176,14 +183,14 @@ int main(int argc, char *argv[])
             if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
             {
                 // Sleep
-                sprintf(logBuffer, "PID %d: Time Remaining %d cycles", currentProcess->pid, currentProcess->timeRemaining);
-                insert(&log, logBuffer);
-
                 //if the quantum time is less than the remaining job time, take the entire quantum
                 if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
                 {
+					//write to log
                     sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, maxTimeProcessing);
                     insert(&log, logBuffer);
+					
+					//sleep for maximum time
                     usleep(maxTimeProcessing);
                     
                     // Subtract quantum time from process
@@ -193,16 +200,17 @@ int main(int argc, char *argv[])
                 //if the quantum is greater than required time, finish the job
                 else
                 {
+					 // write to log
                      sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                 insert(&log, logBuffer);
+
+					 // sleep for remaining job time
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      
                      // Subtract time run from process
                      currentProcess->timeRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                      currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                 }
-                sprintf(logBuffer, "PID %d: Time Remaining %d cycles", currentProcess->pid, currentProcess->timeRemaining);
-                insert(&log, logBuffer);
             }
 
             // if a process has an I/O operation
@@ -217,18 +225,17 @@ int main(int argc, char *argv[])
                 // set ioFinished to false so this process will be skipped in the queue
                 currentProcess->ioFinished = false;
 
-                // write moar to the log
-                printf("Time remaining %d\n", currentProcess->timeRemaining);
+                // write reassurance the program is working to the terminal
+                printf("Working...\n");
+
                 currentProcess->threadBeingCreated = true;
-                threadCreate(&currentProcess, simulator);
+
+				// create thread
+                threadCreate(&currentProcess, simulator, &log);
 
                 // wait for thread to finish creating itself
-                // weird errors happen to process if not made to wait for a second
+                // weird errors happen to process if not made to wait for thread creation
                 while(currentProcess->threadBeingCreated);
-
-                //write more time remaining to log
-                printf("Time remaining %d\n", currentProcess->timeRemaining);
-                printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
 
             }
         }
@@ -242,12 +249,22 @@ int main(int argc, char *argv[])
         
         //Delete the process if it is done
         if( currentProcess->timeRemaining <= 0 && currentProcess->ioInterrupted == false && currentProcess->ioFinished == true)
-            currentProcess = deleteProcess( currentProcess );   
+		{
+			sprintf(logBuffer, "PID %d: finished", currentProcess->pid);
+			insert(&log, logBuffer);
+            currentProcess = deleteProcess( currentProcess );  
+		} 
             
         //Get the next process
-        else 
-            setCurrentProcess(&currentProcess, simulator);         
+        else
+		{
+            setCurrentProcess(&currentProcess, simulator);
+		}         
     }
+
+	//last log output
+	insert(&log, "System End");
+
     //Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
@@ -281,7 +298,7 @@ int main(int argc, char *argv[])
     	//Close the output file
         fclose(output);
     }
-    
+
     // Free memory
     free(simulator.version);
     free(simulator.processorScheduling);
@@ -611,11 +628,6 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
         previousProcess->previousPCB = tempProcess;
     }
     
-    for(unsigned int i = 0; i < numberOfProcesses; i++) {
-    	printf("PID %d offset %p %p %p\n", (*process)->pid, (*process), (*process)->nextPCB, (*process)->previousPCB);
-    	(*process) = (*process)->nextPCB;
-    }
-    
     // Close file
     fclose(input);
 
@@ -691,49 +703,55 @@ processControlBlock* deleteProcess(struct processControlBlock *currentProcess)
 
 void* threadWait(void* threadInfo)
 {
-    //Initalize variables
+    //Initalize varables, and thread info struct recast as usable pointer
     struct threadInfo *info = (struct threadInfo*)threadInfo;
     unsigned int temp = info->process->jobs[info->process->currentJob].cyclesRemaining;
+	char logBuffer [100];
     
     // Clear cycles remaining for current job
     info->process->timeRemaining -= info->process->jobs[info->process->currentJob].cyclesRemaining;
     info->process->jobs[info->process->currentJob].cyclesRemaining = 0;
     
-    // Clear thread beign created
+    // Clear thread being created
     info->process->threadBeingCreated = false;
-    
-    printf("thread created\n");
+   
+	//write to log 
+    sprintf(logBuffer, "PID %d: I/O thread created", info->process->pid);
+	insert(info->log, logBuffer);
     
     //calculate waitTime
     int waitTime = (temp * info->quantumTime * 1000);
     usleep(waitTime);
+
     //If there is another interrupt,
-    //wait for it to be serviced
-    
+    //wait for it to be serviced    
     while (interrupted == 1);
     
     //Set interrupt for itself
     interrupted = 1;   
     
-    //send data to log
-    //do the log thing
-    
-    printf("thread finished\n");
-    //alert process to its completion
+    //write data to log    
+    sprintf(logBuffer, "PID %d: I/O thread finished %d (microsec)", info->process->pid, waitTime);
+	insert(info->log, logBuffer);
+
+    //alert process to thread completion
     info->process->ioInterrupted = true;
     free(threadInfo);
+
     //Returns
     pthread_exit(0);
 }
 
-void threadCreate(struct processControlBlock **process,  struct simulatorStructure simulator)
+void threadCreate(struct processControlBlock **process,  struct simulatorStructure simulator, List *log)
 {
     pthread_t thread;
     threadInfo *info = (threadInfo*)malloc(sizeof(threadInfo));
     
     // put correct information into threadInfo struct
     info->process = *process;
+	info->log = log;
     
+	//check for what type of job for I/O so that the right cycle time is assigned to the thread
     if( strcmp("monitor", (*process)->jobs[(*process)->currentJob].name) == 0)
     {
         info->quantumTime = simulator.monitorDisplayTime;
@@ -750,5 +768,7 @@ void threadCreate(struct processControlBlock **process,  struct simulatorStructu
     {
         info->quantumTime = simulator.printerCycleTime;
     }
+
+	//create the thread
     pthread_create(&thread, NULL, threadWait, (void*)info);
 }
