@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
     List log;
     FILE *output;
     ListNode *tempNode = NULL;
+    char logBuffer [100];
     
     // initializes log
     init(&log);
@@ -144,7 +145,7 @@ int main(int argc, char *argv[])
     // Set current process
     currentProcess = &process[0];
     
-    insert(&log, "Testing Log File\n");
+    insert(&log, "System Start 0 (microsec)\n");
     
     //Begin Simulation Loop and go until no processes remain
     while(currentProcess != NULL)
@@ -174,13 +175,14 @@ int main(int argc, char *argv[])
             if(currentProcess->jobs[currentProcess->currentJob].operation == 'P') 
             {
                 // Sleep
-                printf("Job Time Rem %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                printf("PID %d Proc Time Rem %d\n", currentProcess->pid, currentProcess->timeRemaining);
+                sprintf(logBuffer, "PID %d: Time Remaining %d cycles", currentProcess->pid, currentProcess->timeRemaining);
+                insert(&log, logBuffer);
 
                 //if the quantum time is less than the remaining job time, take the entire quantum
                 if(simulator.quantum < currentProcess->jobs[currentProcess->currentJob].cyclesRemaining)
                 {
-                    printf("Time Processing %d\n", maxTimeProcessing);
+                    sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, maxTimeProcessing);
+                    insert(&log, logBuffer);
                     usleep(maxTimeProcessing);
                     
                     // Subtract quantum time from process
@@ -190,15 +192,16 @@ int main(int argc, char *argv[])
                 //if the quantum is greater than required time, finish the job
                 else
                 {
-                     printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                     sprintf(logBuffer, "PID %d: CPU Process %d (microsec)", currentProcess->pid, currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
+                insert(&log, logBuffer);
                      usleep(currentProcess->jobs[currentProcess->currentJob].cyclesRemaining * simulator.processorCycleTime * 1000);
                      
                      // Subtract time run from process
                      currentProcess->timeRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                      currentProcess->jobs[currentProcess->currentJob].cyclesRemaining -= currentProcess->jobs[currentProcess->currentJob].cyclesRemaining;
                 }
-                printf("Job Time Remaining %d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
-                printf("Proc Time Rem %d\n", currentProcess->timeRemaining);
+                sprintf(logBuffer, "PID %d: Time Remaining %d cycles", currentProcess->pid, currentProcess->timeRemaining);
+                insert(&log, logBuffer);
             }
 
             // if a process has an I/O operation
@@ -233,7 +236,7 @@ int main(int argc, char *argv[])
         else 
             setCurrentProcess(&currentProcess, simulator);         
     }
-    /*//Print output to monitor if specified by the configuration file
+    //Print output to monitor if specified by the configuration file
     if(strcmp(simulator.logType, "Log to Monitor") == 0 || strcmp(simulator.logType, "Log to Both") == 0)
     {
         print(&log);
@@ -265,7 +268,7 @@ int main(int argc, char *argv[])
     	
     	//Close the output file
         fclose(output);
-    }*/
+    }
     
     // Free memory
     free(simulator.version);
