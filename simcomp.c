@@ -156,8 +156,14 @@ int main(int argc, char *argv[])
 
         if(interrupted == 1)
         {
-            currentProcess->jobs[currentProcess->currentJob].cyclesRemaining = 0;
-            currentProcess->ioFinished = true;
+            tempPCB = &process[0];
+            while(tempPCB->ioInterrupted == false)
+            {
+                tempPCB = tempPCB->nextPCB;
+            }
+            tempPCB->jobs[currentProcess->currentJob].cyclesRemaining = 0;
+            tempPCB->ioFinished = true;
+            tempPCB->ioInterrupted = false;
         }
         
         //Process current task by busy waiting
@@ -642,7 +648,7 @@ void* threadWait(void* threadInfo)
     
     printf("thread created");
     //calculate waitTime
-    int waitTime = (info->processCycles * info->quantumTime * 1000);
+    int waitTime = (info->process->jobs[info->process->currentJob].cyclesRemaining * info->quantumTime * 1000);
     usleep(waitTime);
 
     //If there is another interrupt,
