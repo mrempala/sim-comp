@@ -44,7 +44,6 @@ typedef struct processControlBlock
     int priority;
     bool ioInterrupted;
     bool ioFinished;
-    bool threadBeingCreated;
     taskInfoBlock *jobs;
     unsigned int numberOfJobs;
     unsigned int currentJob;
@@ -208,9 +207,8 @@ int main(int argc, char *argv[])
                 puts("IO Process");
                 currentProcess->ioFinished = false;
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
-                currentProcess->threadBeingCreated = true;
                 threadCreate(&currentProcess, simulator);
-                while(currentProcess->threadBeingCreated);
+                while(currentProcess->ioFinished == false);
                 printf("Time remaining %d\n", currentProcess->timeRemaining);
                 printf("%d\n", currentProcess->jobs[currentProcess->currentJob].cyclesRemaining);
                 if(currentProcess->ioInterrupted)
@@ -465,7 +463,7 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     FILE *input;
     fpos_t cursor;
     int tempValue = 0;
-    unsigned int numberOfJobs, length;
+    unsigned int numberOfJobs, length, numberOfProcesses = 0;
     processControlBlock *tempProcess = NULL , *previousProcess = NULL;
     
     // Return failure if the file doesn't exist
@@ -498,6 +496,9 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             
                 // Set previous process's next process
                 previousProcess->nextPCB = tempProcess;
+            
+            // Increment number of processes
+            numberOfProcesses++;
         
             // Ignore character in file until next group
             while(fgetc(input) != ' ');
@@ -526,7 +527,6 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
             tempProcess->ioFinished = true;
             tempProcess->ioInterrupted = false;
             tempProcess->arrivalTime = 0;
-            tempProcess->threadBeingCreated = false;
             
             // Go through all jobs in the process
             for(unsigned int i = 0; i < numberOfJobs; i++) {
@@ -585,8 +585,8 @@ bool createProcessQueue(struct processControlBlock **process, const char *proces
     previousProcess->nextPCB = *process;
     
     // Set previous PCB
-    while((*process)->previousPCB == NULL) {
-        tempProcess = *process;
+    for(unsigned int i = 0; i < numberOfProcesses; i++) {
+        tempProcess = process;
         *process = (*process)->nextPCB;
         (*process)->previousPCB = tempProcess;
     }
@@ -679,7 +679,6 @@ void* threadWait(void* threadInfo)
     //alert process to its completion
     info->process->ioInterrupted = true; 
     info->process->ioFinished = true;
-    info->process->threadBeingCreated = false;
     
     //send data to log
     //do the log thing
